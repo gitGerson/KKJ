@@ -23,6 +23,10 @@
                     <flux:sidebar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
                         {{ __('Kemah') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
+                        {{ __('Umat') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
