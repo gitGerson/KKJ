@@ -8,6 +8,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::livewire('areas', 'pages::areas.index')->name('areas.index');
     Route::livewire('kemah', 'pages::kemah.index')->name('kemah.index');
+    Route::livewire('keluarga', 'pages::keluarga.index')->name('keluarga.index');
     Route::livewire('umat', 'pages::umat.index')->name('umat.index');
 });
 

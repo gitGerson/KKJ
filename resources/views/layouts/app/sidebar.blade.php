@@ -24,6 +24,10 @@
                         {{ __('Kemah') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="layout-grid" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
+                        {{ __('Keluarga') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="layout-grid" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
                         {{ __('Umat') }}
                     </flux:sidebar.item>

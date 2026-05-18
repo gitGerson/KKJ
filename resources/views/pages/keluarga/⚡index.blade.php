@@ -1,0 +1,427 @@
+<?php
+
+use App\Models\Keluarga;
+use App\Models\Umat;
+use Flux\Flux;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+new #[Title('Keluarga')] class extends Component {
+    use WithPagination;
+
+    public string $search = '';
+    public bool $showFormModal = false;
+    public ?int $editingKeluargaId = null;
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $form = [
+        'no_keluarga' => '',
+    ];
+
+    /**
+     * @var array<int, array<string, mixed>>
+     */
+    public array $memberRows = [];
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function openCreateModal(): void
+    {
+        $this->resetForm();
+        $this->addMemberRow();
+        $this->showFormModal = true;
+    }
+
+    public function openEditModal(int $keluargaId): void
+    {
+        $keluarga = Keluarga::query()
+            ->with(['umat' => fn ($query) => $query->orderBy('nama_lengkap')])
+            ->findOrFail($keluargaId);
+
+        $this->editingKeluargaId = $keluarga->id;
+        $this->form = [
+            'no_keluarga' => $keluarga->no_keluarga,
+        ];
+        $this->memberRows = $keluarga->umat
+            ->map(fn (Umat $umat): array => [
+                'mode' => 'existing',
+                'umat_id' => $umat->id,
+                'nama_lengkap' => '',
+                'nama_panggilan' => '',
+                'nomor_telepon' => '',
+                'hub_kk' => '',
+            ])
+            ->values()
+            ->all();
+
+        if ($this->memberRows === []) {
+            $this->addMemberRow();
+        }
+
+        $this->resetValidation();
+        $this->showFormModal = true;
+    }
+
+    public function addMemberRow(string $mode = 'existing'): void
+    {
+        $this->memberRows[] = [
+            'mode' => $mode,
+            'umat_id' => '',
+            'nama_lengkap' => '',
+            'nama_panggilan' => '',
+            'nomor_telepon' => '',
+            'hub_kk' => '',
+        ];
+    }
+
+    public function useExistingUmat(int $index): void
+    {
+        $this->memberRows[$index]['mode'] = 'existing';
+        $this->memberRows[$index]['nama_lengkap'] = '';
+        $this->memberRows[$index]['nama_panggilan'] = '';
+        $this->memberRows[$index]['nomor_telepon'] = '';
+        $this->memberRows[$index]['hub_kk'] = '';
+    }
+
+    public function createNewUmat(int $index): void
+    {
+        $this->memberRows[$index]['mode'] = 'create';
+        $this->memberRows[$index]['umat_id'] = '';
+    }
+
+    public function removeMemberRow(int $index): void
+    {
+        unset($this->memberRows[$index]);
+
+        $this->memberRows = array_values($this->memberRows);
+
+        if ($this->memberRows === []) {
+            $this->addMemberRow();
+        }
+    }
+
+    public function saveKeluarga(): void
+    {
+        $this->normalizeRows();
+
+        $validated = $this->validateForm();
+
+        DB::transaction(function () use ($validated): void {
+            $keluarga = $this->editingKeluargaId
+                ? Keluarga::query()->findOrFail($this->editingKeluargaId)
+                : new Keluarga();
+
+            $keluarga->fill($validated['form']);
+            $keluarga->save();
+
+            $existingUmatIds = collect($validated['memberRows'])
+                ->where('mode', 'existing')
+                ->pluck('umat_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $newUmatIds = collect($validated['memberRows'])
+                ->where('mode', 'create')
+                ->map(function (array $row) use ($keluarga): int {
+                    return Umat::create([
+                        'keluarga_id' => $keluarga->id,
+                        'nama_lengkap' => $row['nama_lengkap'],
+                        'nama_panggilan' => $row['nama_panggilan'] ?? null,
+                        'nomor_telepon' => $row['nomor_telepon'] ?? null,
+                        'hub_kk' => $row['hub_kk'] ?? null,
+                    ])->id;
+                });
+
+            $memberIds = $existingUmatIds->merge($newUmatIds)->unique()->values();
+
+            if ($this->editingKeluargaId) {
+                Umat::query()
+                    ->where('keluarga_id', $keluarga->id)
+                    ->whereNotIn('id', $memberIds)
+                    ->update(['keluarga_id' => null]);
+            }
+
+            if ($memberIds->isNotEmpty()) {
+                Umat::query()
+                    ->whereIn('id', $memberIds)
+                    ->update(['keluarga_id' => $keluarga->id]);
+            }
+        });
+
+        Flux::toast(variant: 'success', text: $this->editingKeluargaId ? __('Keluarga updated.') : __('Keluarga created.'));
+
+        $this->closeFormModal();
+    }
+
+    public function closeFormModal(): void
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
+    }
+
+    public function deleteKeluarga(int $keluargaId): void
+    {
+        DB::transaction(function () use ($keluargaId): void {
+            Umat::query()
+                ->where('keluarga_id', $keluargaId)
+                ->update(['keluarga_id' => null]);
+
+            Keluarga::query()->findOrFail($keluargaId)->delete();
+        });
+
+        Flux::toast(variant: 'success', text: __('Keluarga deleted.'));
+    }
+
+    #[Computed]
+    public function keluarga(): LengthAwarePaginator
+    {
+        return Keluarga::query()
+            ->with(['umat' => fn ($query) => $query->orderBy('nama_lengkap')])
+            ->withCount('umat')
+            ->when($this->search !== '', function (Builder $query): void {
+                $query
+                    ->where('no_keluarga', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('umat', fn (Builder $query) => $query->where('nama_lengkap', 'like', '%'.$this->search.'%'));
+            })
+            ->orderBy('no_keluarga')
+            ->paginate(10);
+    }
+
+    #[Computed]
+    public function umatOptions(): Collection
+    {
+        return Umat::query()
+            ->with('keluarga')
+            ->orderBy('nama_lengkap')
+            ->get();
+    }
+
+    /**
+     * @return array{form: array<string, mixed>, memberRows: array<int, array<string, mixed>>}
+     */
+    private function validateForm(): array
+    {
+        $validated = $this->validate([
+            'form.no_keluarga' => ['required', 'string', 'max:255'],
+            'memberRows' => ['array'],
+            'memberRows.*.mode' => ['required', 'in:existing,create'],
+            'memberRows.*.umat_id' => ['nullable', 'exists:umat,id'],
+            'memberRows.*.nama_lengkap' => ['nullable', 'string', 'max:255'],
+            'memberRows.*.nama_panggilan' => ['nullable', 'string', 'max:255'],
+            'memberRows.*.nomor_telepon' => ['nullable', 'string', 'max:255'],
+            'memberRows.*.hub_kk' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $messages = [];
+
+        foreach ($validated['memberRows'] as $index => $row) {
+            if ($row['mode'] === 'existing' && blank($row['umat_id'])) {
+                $messages["memberRows.{$index}.umat_id"] = __('Select an existing umat.');
+            }
+
+            if ($row['mode'] === 'create' && blank($row['nama_lengkap'])) {
+                $messages["memberRows.{$index}.nama_lengkap"] = __('Nama lengkap is required.');
+            }
+        }
+
+        if ($messages !== []) {
+            throw ValidationException::withMessages($messages);
+        }
+
+        return $validated;
+    }
+
+    private function resetForm(): void
+    {
+        $this->editingKeluargaId = null;
+        $this->form = [
+            'no_keluarga' => '',
+        ];
+        $this->memberRows = [];
+        $this->resetValidation();
+    }
+
+    private function normalizeRows(): void
+    {
+        $this->form = collect($this->form)
+            ->map(fn (mixed $value): mixed => $value === '' ? null : $value)
+            ->all();
+        $this->memberRows = collect($this->memberRows)
+            ->map(fn (array $row): array => collect($row)
+                ->map(fn (mixed $value): mixed => $value === '' ? null : $value)
+                ->all())
+            ->values()
+            ->all();
+    }
+}; ?>
+
+<section class="flex h-full w-full flex-1 flex-col gap-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div class="space-y-1">
+            <flux:heading size="xl" level="1">{{ __('Keluarga') }}</flux:heading>
+            <flux:text>{{ __('Manage family numbers and assign umat members.') }}</flux:text>
+        </div>
+
+        <div class="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+            <flux:input wire:model.live.debounce.300ms="search" :label="__('Search')" type="search" placeholder="{{ __('Search keluarga') }}" class="sm:w-80" />
+
+            <div class="flex items-end">
+                <flux:button variant="primary" wire:click="openCreateModal">
+                    {{ __('Create keluarga') }}
+                </flux:button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-700">
+                <thead class="bg-zinc-50 text-start text-xs font-medium uppercase text-zinc-500 dark:bg-zinc-950/60 dark:text-zinc-400">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-start">{{ __('No keluarga') }}</th>
+                        <th scope="col" class="px-4 py-3 text-start">{{ __('Umat') }}</th>
+                        <th scope="col" class="px-4 py-3 text-start">{{ __('Members') }}</th>
+                        <th scope="col" class="px-4 py-3 text-end">{{ __('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
+                    @forelse ($this->keluarga as $keluargaItem)
+                        <tr wire:key="keluarga-{{ $keluargaItem->id }}">
+                            <td class="px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">{{ $keluargaItem->no_keluarga }}</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">{{ $keluargaItem->umat_count }}</td>
+                            <td class="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                                {{ $keluargaItem->umat->pluck('nama_lengkap')->filter()->take(3)->join(', ') ?: '-' }}
+                                @if ($keluargaItem->umat_count > 3)
+                                    {{ __('and :count more', ['count' => $keluargaItem->umat_count - 3]) }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex justify-end gap-2">
+                                    <flux:button size="sm" variant="filled" wire:click="openEditModal({{ $keluargaItem->id }})">
+                                        {{ __('Edit') }}
+                                    </flux:button>
+
+                                    <flux:button size="sm" variant="danger" wire:click="deleteKeluarga({{ $keluargaItem->id }})" wire:confirm="{{ __('Delete this keluarga? Umat members will remain, but no longer be assigned to this keluarga.') }}">
+                                        {{ __('Delete') }}
+                                    </flux:button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                                {{ __('No keluarga found.') }}
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($this->keluarga->hasPages())
+            <div class="border-t border-neutral-200 px-4 py-3 dark:border-neutral-700">
+                {{ $this->keluarga->links() }}
+            </div>
+        @endif
+    </div>
+
+    <flux:modal wire:model="showFormModal" class="max-w-5xl">
+        <form wire:submit="saveKeluarga" class="space-y-6">
+            <div class="space-y-1">
+                <flux:heading size="lg">{{ $editingKeluargaId ? __('Edit keluarga') : __('Create keluarga') }}</flux:heading>
+                <flux:text>{{ __('Add existing umat or create new umat records as family members.') }}</flux:text>
+            </div>
+
+            <flux:input wire:model="form.no_keluarga" :label="__('No keluarga')" type="text" required autofocus />
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                    <flux:heading>{{ __('Umat members') }}</flux:heading>
+
+                    <div class="flex gap-2">
+                        <flux:button type="button" size="sm" variant="filled" wire:click="addMemberRow('existing')">
+                            {{ __('Add existing') }}
+                        </flux:button>
+
+                        <flux:button type="button" size="sm" variant="filled" wire:click="addMemberRow('create')">
+                            {{ __('Create umat') }}
+                        </flux:button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($memberRows as $index => $row)
+                        <div wire:key="keluarga-member-row-{{ $index }}" class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                            <div class="flex flex-col gap-3 lg:flex-row lg:items-start">
+                                <div class="grid flex-1 gap-4 md:grid-cols-2">
+                                    <flux:select wire:model="memberRows.{{ $index }}.mode" :label="__('Type')">
+                                        <flux:select.option value="existing">{{ __('Existing umat') }}</flux:select.option>
+                                        <flux:select.option value="create">{{ __('Create umat') }}</flux:select.option>
+                                    </flux:select>
+
+                                    @if (($row['mode'] ?? 'existing') === 'existing')
+                                        <flux:select wire:model="memberRows.{{ $index }}.umat_id" :label="__('Umat')">
+                                            <flux:select.option value="">{{ __('Select umat') }}</flux:select.option>
+                                            @foreach ($this->umatOptions as $umat)
+                                                <flux:select.option wire:key="keluarga-umat-option-{{ $index }}-{{ $umat->id }}" value="{{ $umat->id }}">
+                                                    {{ $umat->nama_lengkap ?: __('Unnamed umat') }}
+                                                    @if ($umat->keluarga)
+                                                        - {{ $umat->keluarga->no_keluarga }}
+                                                    @endif
+                                                </flux:select.option>
+                                            @endforeach
+                                        </flux:select>
+                                    @else
+                                        <flux:input wire:model="memberRows.{{ $index }}.nama_lengkap" :label="__('Nama lengkap')" type="text" required />
+                                        <flux:input wire:model="memberRows.{{ $index }}.nama_panggilan" :label="__('Panggilan')" type="text" />
+                                        <flux:input wire:model="memberRows.{{ $index }}.nomor_telepon" :label="__('HP')" type="text" />
+                                        <flux:input wire:model="memberRows.{{ $index }}.hub_kk" :label="__('Hub KK')" type="text" />
+                                    @endif
+                                </div>
+
+                                <div class="flex gap-2 lg:pt-6">
+                                    @if (($row['mode'] ?? 'existing') === 'existing')
+                                        <flux:button type="button" size="sm" variant="ghost" wire:click="createNewUmat({{ $index }})">
+                                            {{ __('Create instead') }}
+                                        </flux:button>
+                                    @else
+                                        <flux:button type="button" size="sm" variant="ghost" wire:click="useExistingUmat({{ $index }})">
+                                            {{ __('Use existing') }}
+                                        </flux:button>
+                                    @endif
+
+                                    <flux:button type="button" size="sm" variant="danger" wire:click="removeMemberRow({{ $index }})">
+                                        {{ __('Remove') }}
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <flux:button type="button" variant="filled" wire:click="closeFormModal">
+                    {{ __('Cancel') }}
+                </flux:button>
+
+                <flux:button variant="primary" type="submit">
+                    {{ $editingKeluargaId ? __('Save changes') : __('Create') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+</section>
