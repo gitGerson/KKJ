@@ -17,6 +17,10 @@
                 <flux:navbar.item icon="layout-grid" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
                     {{ __('Areas') }}
                 </flux:navbar.item>
+
+                <flux:navbar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
+                    {{ __('Kemah') }}
+                </flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
@@ -63,6 +67,10 @@
 
                     <flux:sidebar.item icon="layout-grid" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
                         {{ __('Areas') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
+                        {{ __('Kemah') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
