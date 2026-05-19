@@ -4,9 +4,20 @@ use App\Models\Area;
 use App\Models\Keluarga;
 use App\Models\Kemah;
 use App\Models\Umat;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => to_route('dashboard'))->name('home');
+
+Route::post('preferences/locale', function (Request $request) {
+    $validated = $request->validate([
+        'locale' => ['required', 'in:id,en'],
+    ]);
+
+    $request->session()->put('locale', $validated['locale']);
+
+    return back();
+})->name('preferences.locale');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

@@ -6,7 +6,7 @@
                 <flux:text>{{ __('Overview of umat, keluarga, area, and kemah data.') }}</flux:text>
             </div>
 
-            <div class="flex flex-wrap gap-2">
+            <!-- <div class="flex flex-wrap gap-2">
                 <flux:button size="sm" variant="filled" :href="route('umat.index')" wire:navigate>
                     {{ __('Manage umat') }}
                 </flux:button>
@@ -14,7 +14,7 @@
                 <flux:button size="sm" variant="primary" :href="route('keluarga.index')" wire:navigate>
                     {{ __('Manage keluarga') }}
                 </flux:button>
-            </div>
+            </div> -->
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

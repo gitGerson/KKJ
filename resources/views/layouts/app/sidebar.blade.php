@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -76,6 +76,56 @@
                                 </div>
                             </div>
                         </div>
+                    </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <div class="px-2 py-1 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        {{ __('Language') }}
+                    </div>
+                    <flux:menu.radio.group>
+                        <form method="POST" action="{{ route('preferences.locale') }}" class="w-full">
+                            @csrf
+                            <input type="hidden" name="locale" value="id">
+                            <flux:menu.item
+                                as="button"
+                                type="submit"
+                                icon="{{ app()->getLocale() === 'id' ? 'check' : 'language' }}"
+                                class="w-full cursor-pointer"
+                            >
+                                Bahasa Indonesia
+                            </flux:menu.item>
+                        </form>
+
+                        <form method="POST" action="{{ route('preferences.locale') }}" class="w-full">
+                            @csrf
+                            <input type="hidden" name="locale" value="en">
+                            <flux:menu.item
+                                as="button"
+                                type="submit"
+                                icon="{{ app()->getLocale() === 'en' ? 'check' : 'language' }}"
+                                class="w-full cursor-pointer"
+                            >
+                                English
+                            </flux:menu.item>
+                        </form>
+                    </flux:menu.radio.group>
+
+                    <flux:menu.separator />
+
+                    <div class="px-2 py-1 text-xs font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        {{ __('Theme') }}
+                    </div>
+                    <flux:menu.radio.group x-data>
+                        <flux:menu.item icon="sun" x-on:click="$flux.appearance = 'light'">
+                            {{ __('Light') }}
+                        </flux:menu.item>
+                        <flux:menu.item icon="moon" x-on:click="$flux.appearance = 'dark'">
+                            {{ __('Dark') }}
+                        </flux:menu.item>
+                        <flux:menu.item icon="computer-desktop" x-on:click="$flux.appearance = 'system'">
+                            {{ __('System') }}
+                        </flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />

@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Areas')] class extends Component {
+new #[Title('Area')] class extends Component {
     use WithPagination;
 
     public string $name = '';
