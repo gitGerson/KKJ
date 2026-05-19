@@ -3,30 +3,30 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-brand-blue-950">
+        <flux:header container class="kkj-brand-header border-b-2 border-brand-gold-500 bg-brand-blue-950 text-white">
             <flux:sidebar.toggle class="lg:hidden mr-2" icon="bars-2" inset="left" />
 
             <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
 
             <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                <flux:navbar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navbar.item>
 
-                <flux:navbar.item icon="layout-grid" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
+                <flux:navbar.item icon="map" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
                     {{ __('Areas') }}
                 </flux:navbar.item>
 
-                <flux:navbar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
+                <flux:navbar.item icon="building-office-2" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
                     {{ __('Kemah') }}
                 </flux:navbar.item>
 
-                <flux:navbar.item icon="layout-grid" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
+                <flux:navbar.item icon="users" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
                     {{ __('Keluarga') }}
                 </flux:navbar.item>
 
-                <flux:navbar.item icon="layout-grid" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
+                <flux:navbar.item icon="user-group" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
                     {{ __('Umat') }}
                 </flux:navbar.item>
             </flux:navbar>
@@ -61,7 +61,7 @@
         </flux:header>
 
         <!-- Mobile Menu -->
-        <flux:sidebar collapsible="mobile" sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar collapsible="mobile" sticky class="kkj-brand-sidebar border-e border-brand-blue-900 bg-linear-to-b from-brand-blue-950 via-brand-blue-950 to-brand-red-950 text-white lg:hidden">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
@@ -69,23 +69,23 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard')  }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
+                    <flux:sidebar.item icon="map" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
                         {{ __('Areas') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
+                    <flux:sidebar.item icon="building-office-2" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
                         {{ __('Kemah') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
+                    <flux:sidebar.item icon="users" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
                         {{ __('Keluarga') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
+                    <flux:sidebar.item icon="user-group" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
                         {{ __('Umat') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>

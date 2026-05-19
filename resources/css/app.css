@@ -11,6 +11,32 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
+    --color-brand-blue-50: #eef5ff;
+    --color-brand-blue-100: #d9e8ff;
+    --color-brand-blue-200: #b8d4ff;
+    --color-brand-blue-500: #015bfc;
+    --color-brand-blue-600: #014bd7;
+    --color-brand-blue-700: #0039a8;
+    --color-brand-blue-800: #0a2f7d;
+    --color-brand-blue-900: #0b255f;
+    --color-brand-blue-950: #07183f;
+
+    --color-brand-red-50: #fff0f1;
+    --color-brand-red-100: #ffdadd;
+    --color-brand-red-500: #c52027;
+    --color-brand-red-600: #a81820;
+    --color-brand-red-700: #84151c;
+    --color-brand-red-900: #4b1014;
+    --color-brand-red-950: #30080b;
+
+    --color-brand-gold-50: #fff9e6;
+    --color-brand-gold-100: #ffedb8;
+    --color-brand-gold-300: #f4d064;
+    --color-brand-gold-500: #ebb62a;
+    --color-brand-gold-600: #c49118;
+    --color-brand-gold-700: #946b13;
+    --color-brand-gold-900: #4f390c;
+
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
     --color-zinc-200: #e5e5e5;
@@ -23,16 +49,16 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-accent: var(--color-brand-blue-500);
+    --color-accent-content: var(--color-brand-blue-700);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-brand-gold-500);
+        --color-accent-content: var(--color-brand-gold-300);
+        --color-accent-foreground: var(--color-brand-blue-950);
     }
 }
 
@@ -59,6 +85,59 @@ input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+::selection {
+    color: var(--color-accent-foreground);
+    background-color: var(--color-accent);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-group] > div:first-child > div {
+    color: var(--color-brand-gold-100);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-item] {
+    color: rgb(255 255 255 / 0.84);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-item]:hover {
+    color: var(--color-white);
+    background-color: rgb(255 255 255 / 0.14);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-item][data-current] {
+    color: var(--color-brand-blue-700);
+    background-color: var(--color-white);
+    border-color: rgb(255 255 255 / 0.45);
+    box-shadow: 0 10px 30px rgb(7 24 63 / 0.18);
+}
+
+.dark .kkj-brand-sidebar [data-flux-sidebar-item][data-current] {
+    color: var(--color-brand-blue-700);
+    background-color: var(--color-white);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-profile] {
+    color: var(--color-white);
+    background-color: rgb(255 255 255 / 0.1);
+}
+
+.kkj-brand-sidebar [data-flux-sidebar-profile]:hover {
+    background-color: rgb(255 255 255 / 0.16);
+}
+
+.kkj-brand-header [data-flux-navbar-items] {
+    color: rgb(255 255 255 / 0.86);
+}
+
+.kkj-brand-header [data-flux-navbar-items]:hover,
+.kkj-brand-header [data-flux-navbar-items][data-current] {
+    color: var(--color-white);
+    background-color: rgb(255 255 255 / 0.14);
+}
+
+.kkj-brand-header [data-flux-navbar-items][data-current]::after {
+    background-color: var(--color-brand-gold-500);
 }
 
 /* \[:where(&)\]:size-4 {

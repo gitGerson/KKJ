@@ -3,8 +3,8 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-brand-blue-950">
+        <flux:sidebar sticky collapsible="mobile" class="kkj-brand-sidebar border-e border-brand-blue-900 bg-linear-to-b from-brand-blue-950 via-brand-blue-950 to-brand-red-950 text-white">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
@@ -16,19 +16,19 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
+                    <flux:sidebar.item icon="map" :href="route('areas.index')" :current="request()->routeIs('areas.*')" wire:navigate>
                         {{ __('Areas') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
+                    <flux:sidebar.item icon="building-office-2" :href="route('kemah.index')" :current="request()->routeIs('kemah.*')" wire:navigate>
                         {{ __('Kemah') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
+                    <flux:sidebar.item icon="users" :href="route('keluarga.index')" :current="request()->routeIs('keluarga.*')" wire:navigate>
                         {{ __('Keluarga') }}
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="layout-grid" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
+                    <flux:sidebar.item icon="user-group" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
                         {{ __('Umat') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
@@ -50,7 +50,7 @@
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
+        <flux:header class="border-b border-brand-blue-900 bg-brand-blue-950 text-white lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />

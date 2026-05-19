@@ -10,8 +10,8 @@
         </span>
 
         <span class="flex min-w-0 flex-col in-data-flux-sidebar-collapsed-desktop:hidden">
-            <span class="truncate text-sm/5 font-medium text-zinc-800 dark:text-zinc-100">{{ config('app.name', 'KKJ') }}</span>
-            <span class="truncate text-xs/4 text-zinc-500 dark:text-zinc-400">{{ $subtitle }}</span>
+            <span class="truncate text-sm/5 font-medium text-brand-blue-700 in-data-flux-sidebar:text-white dark:text-white">{{ config('app.name', 'KKJ') }}</span>
+            <span class="truncate text-xs/4 text-brand-red-600 in-data-flux-sidebar:text-brand-gold-100 dark:text-brand-gold-300">{{ $subtitle }}</span>
         </span>
     </a>
 @else
@@ -21,8 +21,8 @@
         </span>
 
         <span class="flex min-w-0 flex-col">
-            <span class="truncate text-sm/5 font-medium text-zinc-800 dark:text-zinc-100">{{ config('app.name', 'KKJ') }}</span>
-            <span class="truncate text-xs/4 text-zinc-500 dark:text-zinc-400">{{ $subtitle }}</span>
+            <span class="truncate text-sm/5 font-medium text-brand-blue-700 in-data-flux-header:text-white dark:text-white">{{ config('app.name', 'KKJ') }}</span>
+            <span class="truncate text-xs/4 text-brand-red-600 in-data-flux-header:text-brand-gold-100 dark:text-brand-gold-300">{{ $subtitle }}</span>
         </span>
     </a>
 @endif
