@@ -23,19 +23,20 @@ test('authenticated users can view the keluarga module', function () {
 
 test('authenticated users can create keluarga with existing umat', function () {
     $user = User::factory()->create();
+    Keluarga::factory()->create(['no_keluarga' => 'KK-00041']);
     $umat = Umat::factory()->create(['keluarga_id' => null]);
 
     $this->actingAs($user);
 
     Livewire::test('pages::keluarga.index')
         ->call('openCreateModal')
-        ->set('form.no_keluarga', 'KK-00001')
+        ->assertSet('form.no_keluarga', 'KK-00042')
         ->set('memberRows.0.mode', 'existing')
         ->set('memberRows.0.umat_id', $umat->id)
         ->call('saveKeluarga')
         ->assertHasNoErrors();
 
-    $keluarga = Keluarga::query()->where('no_keluarga', 'KK-00001')->firstOrFail();
+    $keluarga = Keluarga::query()->where('no_keluarga', 'KK-00042')->firstOrFail();
 
     expect($umat->refresh()->keluarga_id)->toBe($keluarga->id);
 });
@@ -52,6 +53,7 @@ test('authenticated users can create keluarga with new umat rows', function () {
         ->set('memberRows.0.nama_lengkap', 'Maria Jakarta')
         ->set('memberRows.0.nama_panggilan', 'Maria')
         ->set('memberRows.0.nomor_telepon', '08123456789')
+        ->set('memberRows.0.jenis_kelamin', 'P')
         ->set('memberRows.0.hub_kk', 'Anak')
         ->call('saveKeluarga')
         ->assertHasNoErrors();
@@ -63,6 +65,7 @@ test('authenticated users can create keluarga with new umat rows', function () {
         'nama_lengkap' => 'Maria Jakarta',
         'nama_panggilan' => 'Maria',
         'nomor_telepon' => '08123456789',
+        'jenis_kelamin' => 'P',
         'hub_kk' => 'Anak',
     ]);
 });

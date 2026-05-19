@@ -40,6 +40,7 @@ new #[Title('Keluarga')] class extends Component {
     public function openCreateModal(): void
     {
         $this->resetForm();
+        $this->form['no_keluarga'] = $this->nextNoKeluarga();
         $this->addMemberRow();
         $this->showFormModal = true;
     }
@@ -61,6 +62,7 @@ new #[Title('Keluarga')] class extends Component {
                 'nama_lengkap' => '',
                 'nama_panggilan' => '',
                 'nomor_telepon' => '',
+                'jenis_kelamin' => '',
                 'hub_kk' => '',
             ])
             ->values()
@@ -82,6 +84,7 @@ new #[Title('Keluarga')] class extends Component {
             'nama_lengkap' => '',
             'nama_panggilan' => '',
             'nomor_telepon' => '',
+            'jenis_kelamin' => '',
             'hub_kk' => '',
         ];
     }
@@ -92,6 +95,7 @@ new #[Title('Keluarga')] class extends Component {
         $this->memberRows[$index]['nama_lengkap'] = '';
         $this->memberRows[$index]['nama_panggilan'] = '';
         $this->memberRows[$index]['nomor_telepon'] = '';
+        $this->memberRows[$index]['jenis_kelamin'] = '';
         $this->memberRows[$index]['hub_kk'] = '';
     }
 
@@ -141,6 +145,7 @@ new #[Title('Keluarga')] class extends Component {
                         'nama_lengkap' => $row['nama_lengkap'],
                         'nama_panggilan' => $row['nama_panggilan'] ?? null,
                         'nomor_telepon' => $row['nomor_telepon'] ?? null,
+                        'jenis_kelamin' => $row['jenis_kelamin'] ?? null,
                         'hub_kk' => $row['hub_kk'] ?? null,
                     ])->id;
                 });
@@ -222,7 +227,8 @@ new #[Title('Keluarga')] class extends Component {
             'memberRows.*.nama_lengkap' => ['nullable', 'string', 'max:255'],
             'memberRows.*.nama_panggilan' => ['nullable', 'string', 'max:255'],
             'memberRows.*.nomor_telepon' => ['nullable', 'string', 'max:255'],
-            'memberRows.*.hub_kk' => ['nullable', 'string', 'max:255'],
+            'memberRows.*.jenis_kelamin' => ['nullable', 'in:L,P'],
+            'memberRows.*.hub_kk' => ['nullable', 'in:Kepala Keluarga,Istri,Anak'],
         ]);
 
         $messages = [];
@@ -242,6 +248,22 @@ new #[Title('Keluarga')] class extends Component {
         }
 
         return $validated;
+    }
+
+    private function nextNoKeluarga(): string
+    {
+        $latestNoKeluarga = Keluarga::query()
+            ->where('no_keluarga', 'like', 'KK-%')
+            ->orderByDesc('no_keluarga')
+            ->value('no_keluarga');
+
+        $lastNumber = 0;
+
+        if (is_string($latestNoKeluarga) && preg_match('/^KK-(\d+)$/', $latestNoKeluarga, $matches) === 1) {
+            $lastNumber = (int) $matches[1];
+        }
+
+        return 'KK-'.str_pad((string) ($lastNumber + 1), 5, '0', STR_PAD_LEFT);
     }
 
     private function resetForm(): void
@@ -338,42 +360,69 @@ new #[Title('Keluarga')] class extends Component {
         @endif
     </div>
 
-    <flux:modal wire:model="showFormModal" class="max-w-5xl">
-        <form wire:submit="saveKeluarga" class="space-y-6">
-            <div class="space-y-1">
-                <flux:heading size="lg">{{ $editingKeluargaId ? __('Edit keluarga') : __('Create keluarga') }}</flux:heading>
-                <flux:text>{{ __('Add existing umat or create new umat records as family members.') }}</flux:text>
+    <flux:modal wire:model="showFormModal" class="max-w-[96rem]">
+        <form wire:submit="saveKeluarga" class="flex max-h-[82vh] flex-col">
+            <div class="border-b border-neutral-200 px-1 pb-5 dark:border-neutral-700">
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ $editingKeluargaId ? __('Edit keluarga') : __('Create keluarga') }}</flux:heading>
+                    <flux:text>{{ __('Add existing umat or create new umat records as family members.') }}</flux:text>
+                </div>
             </div>
 
-            <flux:input wire:model="form.no_keluarga" :label="__('No keluarga')" type="text" required autofocus />
+            <div class="-mx-1 flex-1 overflow-y-auto px-1 py-6 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-400/70 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600 [&::-webkit-scrollbar-track]:bg-transparent">
+                <div class="grid gap-5 lg:grid-cols-[14rem_1fr]">
 
-            <div class="space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                    <flux:heading>{{ __('Umat members') }}</flux:heading>
-
-                    <div class="flex gap-2">
-                        <flux:button type="button" size="sm" variant="filled" wire:click="addMemberRow('existing')">
-                            {{ __('Add existing') }}
-                        </flux:button>
-
-                        <flux:button type="button" size="sm" variant="filled" wire:click="addMemberRow('create')">
-                            {{ __('Create umat') }}
-                        </flux:button>
-                    </div>
+                    <flux:field class="max-w-md">
+                        <flux:label>
+                            {{ __('No keluarga') }}
+                            <span class="text-brand-red-500">*</span>
+                        </flux:label>
+                        <flux:input wire:model="form.no_keluarga" type="text" description="{{ __('Auto generated') }}" readonly required />
+                        <flux:error name="form.no_keluarga" />
+                    </flux:field>
                 </div>
 
-                <div class="space-y-4">
-                    @foreach ($memberRows as $index => $row)
-                        <div wire:key="keluarga-member-row-{{ $index }}" class="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                            <div class="flex flex-col gap-3 lg:flex-row lg:items-start">
-                                <div class="grid flex-1 gap-4 md:grid-cols-2">
-                                    <flux:select wire:model="memberRows.{{ $index }}.mode" :label="__('Type')">
-                                        <flux:select.option value="existing">{{ __('Existing umat') }}</flux:select.option>
-                                        <flux:select.option value="create">{{ __('Create umat') }}</flux:select.option>
-                                    </flux:select>
+                <flux:separator class="my-6" />
 
-                                    @if (($row['mode'] ?? 'existing') === 'existing')
-                                        <flux:select wire:model="memberRows.{{ $index }}.umat_id" :label="__('Umat')">
+                <div class="space-y-3">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="space-y-1">
+                            <flux:heading>{{ __('Umat members') }}</flux:heading>
+                            <flux:text>{{ __('Add existing umat or create new umat records as family members.') }}</flux:text>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <flux:button type="button" size="sm" variant="filled" wire:click="addMemberRow('existing')">
+                                {{ __('Add existing') }}
+                            </flux:button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="hidden grid-cols-[10rem_minmax(20rem,1.5fr)_10rem_13rem_5rem] gap-3 px-3 text-xs font-medium uppercase text-zinc-500 dark:text-zinc-400 xl:grid">
+                            <div>{{ __('Jenis') }}</div>
+                            <div>{{ __('Nama lengkap') }}</div>
+                            <div>{{ __('Gender') }}</div>
+                            <div>{{ __('Hub KK') }}</div>
+                            <div class="text-end">{{ __('Actions') }}</div>
+                        </div>
+
+                        @foreach ($memberRows as $index => $row)
+                            @php
+                                $selectedUmat = (($row['mode'] ?? 'existing') === 'existing')
+                                    ? $this->umatOptions->firstWhere('id', (int) ($row['umat_id'] ?? 0))
+                                    : null;
+                            @endphp
+
+                            <div wire:key="keluarga-member-row-{{ $index }}" class="grid gap-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-700 xl:grid-cols-[10rem_minmax(20rem,1.5fr)_10rem_13rem_5rem] xl:items-start">
+                                <flux:select wire:model.live="memberRows.{{ $index }}.mode" :label="__('Jenis')" label:sr-only size="sm">
+                                    <flux:select.option value="existing">{{ __('Data terdaftar') }}</flux:select.option>
+                                    <flux:select.option value="create">{{ __('Data baru') }}</flux:select.option>
+                                </flux:select>
+
+                                @if (($row['mode'] ?? 'existing') === 'existing')
+                                    <div>
+                                        <flux:select wire:model.live="memberRows.{{ $index }}.umat_id" :label="__('Nama lengkap')" label:sr-only size="sm">
                                             <flux:select.option value="">{{ __('Select umat') }}</flux:select.option>
                                             @foreach ($this->umatOptions as $umat)
                                                 <flux:select.option wire:key="keluarga-umat-option-{{ $index }}-{{ $umat->id }}" value="{{ $umat->id }}">
@@ -384,36 +433,38 @@ new #[Title('Keluarga')] class extends Component {
                                                 </flux:select.option>
                                             @endforeach
                                         </flux:select>
-                                    @else
-                                        <flux:input wire:model="memberRows.{{ $index }}.nama_lengkap" :label="__('Nama lengkap')" type="text" required />
-                                        <flux:input wire:model="memberRows.{{ $index }}.nama_panggilan" :label="__('Panggilan')" type="text" />
-                                        <flux:input wire:model="memberRows.{{ $index }}.nomor_telepon" :label="__('HP')" type="text" />
-                                        <flux:input wire:model="memberRows.{{ $index }}.hub_kk" :label="__('Hub KK')" type="text" />
-                                    @endif
-                                </div>
+                                    </div>
 
-                                <div class="flex gap-2 lg:pt-6">
-                                    @if (($row['mode'] ?? 'existing') === 'existing')
-                                        <flux:button type="button" size="sm" variant="ghost" wire:click="createNewUmat({{ $index }})">
-                                            {{ __('Create instead') }}
-                                        </flux:button>
-                                    @else
-                                        <flux:button type="button" size="sm" variant="ghost" wire:click="useExistingUmat({{ $index }})">
-                                            {{ __('Use existing') }}
-                                        </flux:button>
-                                    @endif
+                                    <flux:input :label="__('Gender')" label:sr-only type="text" size="sm" value="{{ $selectedUmat?->jenis_kelamin ? __($selectedUmat->jenis_kelamin) : '-' }}" disabled />
+                                    <flux:input :label="__('Hub KK')" label:sr-only type="text" size="sm" value="{{ $selectedUmat?->hub_kk ? __($selectedUmat->hub_kk) : '-' }}" disabled />
+                                @else
+                                    <flux:input wire:model="memberRows.{{ $index }}.nama_lengkap" :label="__('Nama lengkap')" label:sr-only type="text" size="sm" required />
 
-                                    <flux:button type="button" size="sm" variant="danger" wire:click="removeMemberRow({{ $index }})">
-                                        {{ __('Remove') }}
-                                    </flux:button>
+                                    <flux:select wire:model="memberRows.{{ $index }}.jenis_kelamin" :label="__('Gender')" label:sr-only size="sm">
+                                        <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                                        <flux:select.option value="L">{{ __('L') }}</flux:select.option>
+                                        <flux:select.option value="P">{{ __('P') }}</flux:select.option>
+                                    </flux:select>
+
+                                    <flux:select wire:model="memberRows.{{ $index }}.hub_kk" :label="__('Hub KK')" label:sr-only size="sm">
+                                        <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                                        <flux:select.option value="Kepala Keluarga">{{ __('Kepala Keluarga') }}</flux:select.option>
+                                        <flux:select.option value="Istri">{{ __('Istri') }}</flux:select.option>
+                                        <flux:select.option value="Anak">{{ __('Anak') }}</flux:select.option>
+                                    </flux:select>
+                                @endif
+
+                                <div class="flex justify-end gap-1">
+
+                                    <flux:button type="button" size="sm" variant="danger" wire:click="removeMemberRow({{ $index }})" icon="trash" tooltip="{{ __('Remove') }}" aria-label="{{ __('Remove') }}" />
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3 border-t border-neutral-200 px-1 pt-5 dark:border-neutral-700">
                 <flux:button type="button" variant="filled" wire:click="closeFormModal">
                     {{ __('Cancel') }}
                 </flux:button>
