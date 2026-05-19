@@ -282,74 +282,124 @@ new #[Title('Umat')] class extends Component {
         @endif
     </div>
 
-    <flux:modal wire:model="showFormModal" class="max-w-5xl">
-        <form wire:submit="saveUmat" class="space-y-6">
-            <div class="space-y-1">
-                <flux:heading size="lg">{{ $editingUmatId ? __('Edit umat') : __('Create umat') }}</flux:heading>
-                <flux:text>{{ __('Fill the profile, relationship, and domicile data for this umat.') }}</flux:text>
+    <flux:modal wire:model="showFormModal" class="max-w-6xl">
+        <form wire:submit="saveUmat" class="flex max-h-[82vh] flex-col">
+            <div class="border-b border-neutral-200 px-1 pb-5 dark:border-neutral-700">
+                <div class="space-y-1">
+                    <flux:heading size="lg">{{ $editingUmatId ? __('Edit umat') : __('Create umat') }}</flux:heading>
+                    <flux:text>{{ __('Fill the profile, relationship, and domicile data for this umat.') }}</flux:text>
+                </div>
             </div>
 
-            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                <flux:input wire:model="form.nama_lengkap" :label="__('Nama lengkap')" type="text" required autofocus />
-                <flux:input wire:model="form.nama_panggilan" :label="__('Panggilan')" type="text" />
-                <flux:input wire:model="form.nomor_telepon" :label="__('HP')" type="text" />
+            <div class="-mx-1 flex-1 overflow-y-auto px-1 py-6 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-400/70 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600 [&::-webkit-scrollbar-track]:bg-transparent">
+                <div class="grid gap-6 lg:grid-cols-[13rem_1fr]">
+                    <div class="space-y-1">
+                        <flux:heading>{{ __('Data utama') }}</flux:heading>
+                        <flux:text>{{ __('Identitas dan kontak umat.') }}</flux:text>
+                    </div>
 
-                <flux:select wire:model="form.jenis_kelamin" :label="__('P/L')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    <flux:select.option value="P">{{ __('P') }}</flux:select.option>
-                    <flux:select.option value="L">{{ __('L') }}</flux:select.option>
-                </flux:select>
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        <flux:field class="md:col-span-2">
+                            <flux:label>
+                                {{ __('Nama lengkap') }}
+                                <span class="text-brand-red-500">*</span>
+                            </flux:label>
+                            <flux:input wire:model="form.nama_lengkap" type="text" required autofocus />
+                            <flux:error name="form.nama_lengkap" />
+                        </flux:field>
+                        <flux:input wire:model="form.nama_panggilan" :label="__('Panggilan')" type="text" />
+                        <flux:input wire:model="form.nomor_telepon" :label="__('HP')" type="text" />
 
-                <flux:select wire:model="form.status_perkawinan" :label="__('Status')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    <flux:select.option value="Belum Kawin">{{ __('Belum Kawin') }}</flux:select.option>
-                    <flux:select.option value="Kawin">{{ __('Kawin') }}</flux:select.option>
-                    <flux:select.option value="Cerai Hidup">{{ __('Cerai Hidup') }}</flux:select.option>
-                    <flux:select.option value="Cerai Mati">{{ __('Cerai Mati') }}</flux:select.option>
-                </flux:select>
+                        <flux:select wire:model="form.jenis_kelamin" :label="__('P/L')">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            <flux:select.option value="P">{{ __('P') }}</flux:select.option>
+                            <flux:select.option value="L">{{ __('L') }}</flux:select.option>
+                        </flux:select>
 
-                <flux:input wire:model="form.hub_kk" :label="__('Hub KK')" type="text" />
+                        <flux:select wire:model="form.status_perkawinan" :label="__('Status')">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            <flux:select.option value="Belum Kawin">{{ __('Belum Kawin') }}</flux:select.option>
+                            <flux:select.option value="Kawin">{{ __('Kawin') }}</flux:select.option>
+                            <flux:select.option value="Cerai Hidup">{{ __('Cerai Hidup') }}</flux:select.option>
+                            <flux:select.option value="Cerai Mati">{{ __('Cerai Mati') }}</flux:select.option>
+                        </flux:select>
 
-                <flux:select wire:model="form.golongan_darah" :label="__('Gol Dar')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    <flux:select.option value="A">{{ __('A') }}</flux:select.option>
-                    <flux:select.option value="B">{{ __('B') }}</flux:select.option>
-                    <flux:select.option value="AB">{{ __('AB') }}</flux:select.option>
-                    <flux:select.option value="O">{{ __('O') }}</flux:select.option>
-                </flux:select>
+                        <flux:select wire:model="form.golongan_darah" :label="__('Gol Dar')">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            <flux:select.option value="A">{{ __('A') }}</flux:select.option>
+                            <flux:select.option value="B">{{ __('B') }}</flux:select.option>
+                            <flux:select.option value="AB">{{ __('AB') }}</flux:select.option>
+                            <flux:select.option value="O">{{ __('O') }}</flux:select.option>
+                        </flux:select>
+                    </div>
+                </div>
 
-                <flux:input wire:model="form.tempat_lahir" :label="__('Tempat lahir')" type="text" />
-                <flux:input wire:model="form.tanggal_lahir" :label="__('Tanggal lahir')" type="date" />
+                <flux:separator class="my-6" />
 
-                <flux:select wire:model="form.area_id" :label="__('Area')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    @foreach ($this->areas as $area)
-                        <flux:select.option wire:key="umat-area-{{ $area->id }}" value="{{ $area->id }}">{{ $area->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
+                <div class="grid gap-6 lg:grid-cols-[13rem_1fr]">
+                    <div class="space-y-1">
+                        <flux:heading>{{ __('Relasi jemaat') }}</flux:heading>
+                        <flux:text>{{ __('Hubungkan umat dengan area, kemah, dan keluarga.') }}</flux:text>
+                    </div>
 
-                <flux:select wire:model="form.kemah_id" :label="__('Kemah')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    @foreach ($this->kemahOptions as $kemah)
-                        <flux:select.option wire:key="umat-kemah-{{ $kemah->id }}" value="{{ $kemah->id }}">{{ $kemah->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <flux:select wire:model="form.area_id" :label="__('Area')" class="xl:col-span-2">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            @foreach ($this->areas as $area)
+                                <flux:select.option wire:key="umat-area-{{ $area->id }}" value="{{ $area->id }}">{{ $area->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
 
-                <flux:select wire:model="form.keluarga_id" :label="__('Keluarga')">
-                    <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                    @foreach ($this->keluargaOptions as $keluarga)
-                        <flux:select.option wire:key="umat-keluarga-{{ $keluarga->id }}" value="{{ $keluarga->id }}">{{ $keluarga->no_keluarga }}</flux:select.option>
-                    @endforeach
-                </flux:select>
+                        <flux:select wire:model="form.kemah_id" :label="__('Kemah')" class="xl:col-span-2">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            @foreach ($this->kemahOptions as $kemah)
+                                <flux:select.option wire:key="umat-kemah-{{ $kemah->id }}" value="{{ $kemah->id }}">{{ $kemah->name }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
 
-                <flux:input wire:model="form.pendidikan" :label="__('Pendidikan')" type="text" />
-                <flux:input wire:model="form.pekerjaan" :label="__('Pekerjaan')" type="text" />
-                <flux:input wire:model="form.domisili" :label="__('Domisili')" type="text" />
+                        <flux:select wire:model="form.keluarga_id" :label="__('Keluarga')" class="xl:col-span-2">
+                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                            @foreach ($this->keluargaOptions as $keluarga)
+                                <flux:select.option wire:key="umat-keluarga-{{ $keluarga->id }}" value="{{ $keluarga->id }}">{{ $keluarga->no_keluarga }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <flux:input wire:model="form.hub_kk" :label="__('Hub KK')" type="text" class="xl:col-span-2" />
+                    </div>
+                </div>
+
+                <flux:separator class="my-6" />
+
+                <div class="grid gap-6 lg:grid-cols-[13rem_1fr]">
+                    <div class="space-y-1">
+                        <flux:heading>{{ __('Data tambahan') }}</flux:heading>
+                        <flux:text>{{ __('Kelahiran, pendidikan, dan pekerjaan.') }}</flux:text>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <flux:input wire:model="form.tempat_lahir" :label="__('Tempat lahir')" type="text" />
+                        <flux:input wire:model="form.tanggal_lahir" :label="__('Tanggal lahir')" type="date" />
+                        <flux:input wire:model="form.pendidikan" :label="__('Pendidikan')" type="text" />
+                        <flux:input wire:model="form.pekerjaan" :label="__('Pekerjaan')" type="text" />
+                    </div>
+                </div>
+
+                <flux:separator class="my-6" />
+
+                <div class="grid gap-6 lg:grid-cols-[13rem_1fr]">
+                    <div class="space-y-1">
+                        <flux:heading>{{ __('Domisili') }}</flux:heading>
+                        <flux:text>{{ __('Alamat tinggal dan domisili saat ini.') }}</flux:text>
+                    </div>
+
+                    <div class="grid gap-4">
+                        <flux:input wire:model="form.domisili" :label="__('Domisili')" type="text" />
+                        <flux:textarea wire:model="form.alamat" :label="__('Alamat')" rows="3" />
+                    </div>
+                </div>
             </div>
 
-            <flux:textarea wire:model="form.alamat" :label="__('Alamat')" rows="3" />
-
-            <div class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3 border-t border-neutral-200 px-1 pt-5 dark:border-neutral-700">
                 <flux:button type="button" variant="filled" wire:click="closeFormModal">
                     {{ __('Cancel') }}
                 </flux:button>
