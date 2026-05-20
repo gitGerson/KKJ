@@ -2,6 +2,7 @@
 
 use App\Models\Keluarga;
 use App\Models\Umat;
+use App\Services\KeluargaExcelImporter;
 use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,14 +12,20 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 new #[Title('Keluarga')] class extends Component {
+    use WithFileUploads;
     use WithPagination;
 
     public string $search = '';
     public bool $showFormModal = false;
+    public bool $showImportModal = false;
     public ?int $editingKeluargaId = null;
+
+    public ?TemporaryUploadedFile $importFile = null;
 
     /**
      * @var array<string, mixed>
@@ -43,6 +50,12 @@ new #[Title('Keluarga')] class extends Component {
         $this->form['no_keluarga'] = $this->nextNoKeluarga();
         $this->addMemberRow();
         $this->showFormModal = true;
+    }
+
+    public function openImportModal(): void
+    {
+        $this->resetImportForm();
+        $this->showImportModal = true;
     }
 
     public function openEditModal(int $keluargaId): void
@@ -177,6 +190,12 @@ new #[Title('Keluarga')] class extends Component {
         $this->resetForm();
     }
 
+    public function closeImportModal(): void
+    {
+        $this->showImportModal = false;
+        $this->resetImportForm();
+    }
+
     public function deleteKeluarga(int $keluargaId): void
     {
         DB::transaction(function () use ($keluargaId): void {
@@ -188,6 +207,26 @@ new #[Title('Keluarga')] class extends Component {
         });
 
         Flux::toast(variant: 'success', text: __('Keluarga deleted.'));
+    }
+
+    public function importKeluarga(KeluargaExcelImporter $importer): void
+    {
+        $this->validate([
+            'importFile' => ['required', 'file', 'mimes:xlsx', 'max:5120'],
+        ]);
+
+        $result = $importer->import($this->importFile->getRealPath());
+
+        $this->resetPage();
+        $this->closeImportModal();
+
+        Flux::toast(
+            variant: 'success',
+            text: __('Imported :umat umat into :keluarga keluarga.', [
+                'umat' => $result['umat'],
+                'keluarga' => $result['keluarga'],
+            ])
+        );
     }
 
     #[Computed]
@@ -276,6 +315,12 @@ new #[Title('Keluarga')] class extends Component {
         $this->resetValidation();
     }
 
+    private function resetImportForm(): void
+    {
+        $this->importFile = null;
+        $this->resetValidation('importFile');
+    }
+
     private function normalizeRows(): void
     {
         $this->form = collect($this->form)
@@ -300,7 +345,11 @@ new #[Title('Keluarga')] class extends Component {
         <div class="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <flux:input wire:model.live.debounce.300ms="search" :label="__('Search')" type="search" placeholder="{{ __('Search keluarga') }}" class="sm:w-80" />
 
-            <div class="flex items-end">
+            <div class="flex items-end gap-2">
+                <flux:button variant="filled" wire:click="openImportModal">
+                    {{ __('Import Excel') }}
+                </flux:button>
+
                 <flux:button variant="primary" wire:click="openCreateModal">
                     {{ __('Create keluarga') }}
                 </flux:button>
@@ -471,6 +520,31 @@ new #[Title('Keluarga')] class extends Component {
 
                 <flux:button variant="primary" type="submit">
                     {{ $editingKeluargaId ? __('Save changes') : __('Create') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <flux:modal wire:model="showImportModal" class="max-w-xl">
+        <form wire:submit="importKeluarga" class="space-y-6">
+            <div class="space-y-1">
+                <flux:heading size="lg">{{ __('Import keluarga') }}</flux:heading>
+                <flux:text>{{ __('Upload an Excel file using the KKJ layout.') }}</flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Excel file') }}</flux:label>
+                <flux:input wire:model="importFile" type="file" accept=".xlsx" />
+                <flux:error name="importFile" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3 border-t border-neutral-200 pt-5 dark:border-neutral-700">
+                <flux:button type="button" variant="filled" wire:click="closeImportModal">
+                    {{ __('Cancel') }}
+                </flux:button>
+
+                <flux:button variant="primary" type="submit" wire:loading.attr="disabled" wire:target="importFile,importKeluarga">
+                    {{ __('Import') }}
                 </flux:button>
             </div>
         </form>
