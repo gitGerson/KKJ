@@ -381,6 +381,10 @@ new #[Title('Keluarga')] class extends Component {
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
+                                    <flux:button size="sm" variant="filled" :href="route('keluarga.pdf', $keluargaItem)" target="_blank">
+                                        {{ __('PDF') }}
+                                    </flux:button>
+
                                     <flux:button size="sm" variant="filled" wire:click="openEditModal({{ $keluargaItem->id }})">
                                         {{ __('Edit') }}
                                     </flux:button>

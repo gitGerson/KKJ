@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\KeluargaPdfController;
 use App\Models\Area;
 use App\Models\Keluarga;
 use App\Models\Kemah;
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('areas', 'pages::areas.index')->name('areas.index');
     Route::livewire('kemah', 'pages::kemah.index')->name('kemah.index');
     Route::livewire('keluarga', 'pages::keluarga.index')->name('keluarga.index');
+    Route::get('keluarga/{keluarga}/pdf', KeluargaPdfController::class)->name('keluarga.pdf');
     Route::livewire('umat', 'pages::umat.index')->name('umat.index');
 });
 
