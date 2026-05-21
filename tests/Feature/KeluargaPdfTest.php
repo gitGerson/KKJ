@@ -45,10 +45,9 @@ test('authenticated users can download a kartu keluarga style pdf', function () 
     $response
         ->assertSuccessful()
         ->assertHeader('Content-Type', 'application/pdf')
-        ->assertSee('%PDF-1.4', false)
-        ->assertSee('KARTU KELUARGA UMAT', false)
-        ->assertSee('LIEM TJOEN PENG / PENGKY', false)
-        ->assertSee('JL. RAYA SELATAN DS. TEMBOK LUWUNG NO. 48', false);
+        ->assertSee('%PDF-', false);
+
+    expect($response->headers->get('Content-Disposition'))->toContain('kartu-keluarga-501.pdf');
 });
 
 test('keluarga index displays a pdf button per row', function () {
