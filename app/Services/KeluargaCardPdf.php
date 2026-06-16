@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\Area;
 use App\Models\Keluarga;
 use App\Models\Umat;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class KeluargaCardPdf
 {
@@ -17,6 +19,7 @@ class KeluargaCardPdf
         $umat = $keluarga->umat->values();
         $area = $umat->pluck('area.name')->filter()->unique()->join(', ') ?: '-';
         $kemah = $umat->pluck('kemah.name')->filter()->unique()->join(', ') ?: '-';
+        $gembalaArea = $this->gembalaArea($umat);
 
         return Pdf::loadView('pdf.keluarga-card', [
             'keluarga' => $keluarga,
@@ -29,6 +32,8 @@ class KeluargaCardPdf
             'documentNumber' => $this->documentNumber($keluarga, $area),
             'kepalaKeluarga' => $this->kepalaKeluarga($umat),
             'logo' => $this->logo(),
+            'gembala' => $gembalaArea?->gembala ?: 'Pdm. Stevan R. Pioh',
+            'ttdGembala' => $this->ttdImage($gembalaArea),
         ])
             ->setPaper('a4', 'landscape')
             ->output();
@@ -86,6 +91,35 @@ class KeluargaCardPdf
     {
         return $umat->first(fn (Umat $umat): bool => $umat->hub_kk === 'Kepala Keluarga')
             ?? $umat->first();
+    }
+
+    /**
+     * Area dari kepala keluarga (atau anggota pertama yang punya area) untuk tanda tangan gembala.
+     *
+     * @param  Collection<int, Umat>  $umat
+     */
+    private function gembalaArea(Collection $umat): ?Area
+    {
+        return $this->kepalaKeluarga($umat)?->area
+            ?? $umat->firstWhere(fn (Umat $member): bool => $member->area !== null)?->area;
+    }
+
+    private function ttdImage(?Area $area): ?string
+    {
+        if ($area?->ttd_path === null) {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+
+        if (! $disk->exists($area->ttd_path)) {
+            return null;
+        }
+
+        $contents = (string) $disk->get($area->ttd_path);
+        $mime = $disk->mimeType($area->ttd_path) ?: 'image/png';
+
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
     }
 
     private function documentNumber(Keluarga $keluarga, string $area): string

@@ -7,6 +7,7 @@ use App\Models\Kemah;
 use App\Models\Umat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\Activitylog\Models\Activity;
 
 Route::get('/', fn () => to_route('dashboard'))->name('home');
 
@@ -57,6 +58,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'kemah' => Umat::query()->whereNull('kemah_id')->count(),
                 'keluarga' => Umat::query()->whereNull('keluarga_id')->count(),
             ],
+            'growth' => [
+                'masuk_bulan' => Umat::query()
+                    ->whereNotNull('tanggal_masuk')
+                    ->whereYear('tanggal_masuk', now()->year)
+                    ->whereMonth('tanggal_masuk', now()->month)
+                    ->count(),
+                'masuk_tahun' => Umat::query()
+                    ->whereNotNull('tanggal_masuk')
+                    ->whereYear('tanggal_masuk', now()->year)
+                    ->count(),
+                'keluar_bulan' => Umat::query()
+                    ->whereIn('status', Umat::STATUS_ARSIP)
+                    ->whereNotNull('tanggal_keluar')
+                    ->whereYear('tanggal_keluar', now()->year)
+                    ->whereMonth('tanggal_keluar', now()->month)
+                    ->count(),
+                'keluar_tahun' => Umat::query()
+                    ->whereIn('status', Umat::STATUS_ARSIP)
+                    ->whereNotNull('tanggal_keluar')
+                    ->whereYear('tanggal_keluar', now()->year)
+                    ->count(),
+            ],
+            'demografi' => Umat::demografiUsia(),
+            'recentActivities' => Activity::query()
+                ->with('causer')
+                ->latest()
+                ->take(8)
+                ->get(),
         ]);
     })->name('dashboard');
     Route::livewire('areas', 'pages::areas.index')->name('areas.index');
@@ -64,6 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('keluarga', 'pages::keluarga.index')->name('keluarga.index');
     Route::get('keluarga/{keluarga}/pdf', KeluargaPdfController::class)->name('keluarga.pdf');
     Route::livewire('umat', 'pages::umat.index')->name('umat.index');
+    Route::livewire('users', 'pages::users.index')->name('users.index')->middleware('can:manage-data');
 });
 
 require __DIR__.'/settings.php';

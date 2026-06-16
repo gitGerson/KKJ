@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -131,6 +132,8 @@ new #[Title('Keluarga')] class extends Component {
 
     public function saveKeluarga(): void
     {
+        Gate::authorize('manage-data');
+
         $this->normalizeRows();
 
         $validated = $this->validateForm();
@@ -198,6 +201,8 @@ new #[Title('Keluarga')] class extends Component {
 
     public function deleteKeluarga(int $keluargaId): void
     {
+        Gate::authorize('manage-data');
+
         DB::transaction(function () use ($keluargaId): void {
             Umat::query()
                 ->where('keluarga_id', $keluargaId)
@@ -211,6 +216,8 @@ new #[Title('Keluarga')] class extends Component {
 
     public function importKeluarga(KeluargaExcelImporter $importer): void
     {
+        Gate::authorize('manage-data');
+
         $this->validate([
             'importFile' => ['required', 'file', 'mimes:xlsx', 'max:5120'],
         ]);
@@ -345,15 +352,17 @@ new #[Title('Keluarga')] class extends Component {
         <div class="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <flux:input wire:model.live.debounce.300ms="search" :label="__('Search')" type="search" placeholder="{{ __('Search keluarga') }}" class="sm:w-80" />
 
-            <div class="flex items-end gap-2">
-                <flux:button variant="filled" wire:click="openImportModal">
-                    {{ __('Import Excel') }}
-                </flux:button>
+            @can('manage-data')
+                <div class="flex items-end gap-2">
+                    <flux:button variant="filled" wire:click="openImportModal">
+                        {{ __('Import Excel') }}
+                    </flux:button>
 
-                <flux:button variant="primary" wire:click="openCreateModal">
-                    {{ __('Create keluarga') }}
-                </flux:button>
-            </div>
+                    <flux:button variant="primary" wire:click="openCreateModal">
+                        {{ __('Create keluarga') }}
+                    </flux:button>
+                </div>
+            @endcan
         </div>
     </div>
 
@@ -385,13 +394,15 @@ new #[Title('Keluarga')] class extends Component {
                                         {{ __('PDF') }}
                                     </flux:button>
 
-                                    <flux:button size="sm" variant="filled" wire:click="openEditModal({{ $keluargaItem->id }})">
-                                        {{ __('Edit') }}
-                                    </flux:button>
+                                    @can('manage-data')
+                                        <flux:button size="sm" variant="filled" wire:click="openEditModal({{ $keluargaItem->id }})">
+                                            {{ __('Edit') }}
+                                        </flux:button>
 
-                                    <flux:button size="sm" variant="danger" wire:click="deleteKeluarga({{ $keluargaItem->id }})" wire:confirm="{{ __('Delete this keluarga? Umat members will remain, but no longer be assigned to this keluarga.') }}">
-                                        {{ __('Delete') }}
-                                    </flux:button>
+                                        <flux:button size="sm" variant="danger" wire:click="deleteKeluarga({{ $keluargaItem->id }})" wire:confirm="{{ __('Delete this keluarga? Umat members will remain, but no longer be assigned to this keluarga.') }}">
+                                            {{ __('Delete') }}
+                                        </flux:button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

@@ -321,8 +321,11 @@
             </tr>
             <tr>
                 <td>
+                    @if (! empty($ttdGembala))
+                        <img src="{{ $ttdGembala }}" alt="" style="height: 48px; margin-bottom: -10px;">
+                    @endif
                     <div class="signature-line"></div>
-                    Pdm. Stevan R. Pioh<br>
+                    {{ $gembala }}<br>
                     Gembala Area
                 </td>
                 <td>

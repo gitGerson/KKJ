@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Pendaftaran publik dimatikan: akun hanya dibuat oleh admin.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

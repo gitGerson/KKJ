@@ -12,12 +12,34 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_PENDETA = 'pendeta';
+
+    /**
+     * @return list<string>
+     */
+    public static function roles(): array
+    {
+        return [self::ROLE_ADMIN, self::ROLE_PENDETA];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isPendeta(): bool
+    {
+        return $this->role === self::ROLE_PENDETA;
+    }
 
     /**
      * Get the attributes that should be cast.

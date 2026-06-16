@@ -5,6 +5,7 @@ use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -30,6 +31,8 @@ new #[Title('Kemah')] class extends Component {
 
     public function createKemah(): void
     {
+        Gate::authorize('manage-data');
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
         ]);
@@ -58,6 +61,8 @@ new #[Title('Kemah')] class extends Component {
 
     public function updateKemah(): void
     {
+        Gate::authorize('manage-data');
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
         ]);
@@ -76,6 +81,8 @@ new #[Title('Kemah')] class extends Component {
 
     public function deleteKemah(int $kemahId): void
     {
+        Gate::authorize('manage-data');
+
         Kemah::query()->findOrFail($kemahId)->delete();
 
         if ($this->editingKemahId === $kemahId) {
@@ -164,13 +171,15 @@ new #[Title('Kemah')] class extends Component {
                                             {{ __('Detail') }}
                                         </flux:button>
 
-                                        <flux:button size="sm" variant="filled" wire:click="editKemah({{ $kemahItem->id }})">
-                                            {{ __('Edit') }}
-                                        </flux:button>
+                                        @can('manage-data')
+                                            <flux:button size="sm" variant="filled" wire:click="editKemah({{ $kemahItem->id }})">
+                                                {{ __('Edit') }}
+                                            </flux:button>
 
-                                        <flux:button size="sm" variant="danger" wire:click="deleteKemah({{ $kemahItem->id }})" wire:confirm="{{ __('Delete this kemah?') }}">
-                                            {{ __('Delete') }}
-                                        </flux:button>
+                                            <flux:button size="sm" variant="danger" wire:click="deleteKemah({{ $kemahItem->id }})" wire:confirm="{{ __('Delete this kemah?') }}">
+                                                {{ __('Delete') }}
+                                            </flux:button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -192,6 +201,7 @@ new #[Title('Kemah')] class extends Component {
             @endif
         </div>
 
+        @can('manage-data')
         <form wire:submit="{{ $editingKemahId ? 'updateKemah' : 'createKemah' }}" class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
             <div class="space-y-1">
                 <flux:heading>{{ $editingKemahId ? __('Edit kemah') : __('Create kemah') }}</flux:heading>
@@ -214,6 +224,7 @@ new #[Title('Kemah')] class extends Component {
                 </div>
             </div>
         </form>
+        @endcan
     </div>
 
     <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900">

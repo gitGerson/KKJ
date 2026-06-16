@@ -31,6 +31,12 @@
                     <flux:sidebar.item icon="user-group" :href="route('umat.index')" :current="request()->routeIs('umat.*')" wire:navigate>
                         {{ __('Umat') }}
                     </flux:sidebar.item>
+
+                    @can('manage-data')
+                        <flux:sidebar.item icon="shield-check" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

@@ -51,6 +51,50 @@
             </a>
         </div>
 
+        <div class="grid gap-4 lg:grid-cols-2">
+            <div class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
+                <div class="space-y-1">
+                    <flux:heading>{{ __('Congregation growth') }}</flux:heading>
+                    <flux:text>{{ __('Members joining and leaving this period.') }}</flux:text>
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-4">
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950/40">
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Joined this month') }}</div>
+                        <div class="mt-1 text-2xl font-semibold text-emerald-600 dark:text-emerald-400">+{{ number_format($growth['masuk_bulan']) }}</div>
+                        <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('This year') }}: {{ number_format($growth['masuk_tahun']) }}</div>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-950/40">
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Left this month') }}</div>
+                        <div class="mt-1 text-2xl font-semibold text-rose-600 dark:text-rose-400">-{{ number_format($growth['keluar_bulan']) }}</div>
+                        <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('This year') }}: {{ number_format($growth['keluar_tahun']) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
+                <div class="space-y-1">
+                    <flux:heading>{{ __('Age demographics') }}</flux:heading>
+                    <flux:text>{{ __('Active congregation distribution by age group.') }}</flux:text>
+                </div>
+
+                <div class="mt-5 space-y-3">
+                    @php($demografiTotal = array_sum($demografi))
+                    @foreach ($demografi as $kelompok => $jumlah)
+                        <div>
+                            <div class="flex items-center justify-between gap-3 text-sm">
+                                <span class="font-medium text-zinc-950 dark:text-zinc-50">{{ __(ucfirst($kelompok)) }}</span>
+                                <span class="text-zinc-600 dark:text-zinc-400">{{ number_format($jumlah) }}</span>
+                            </div>
+                            <div class="mt-1 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                                <div class="h-full rounded-full bg-blue-500" style="width: {{ $demografiTotal > 0 ? round($jumlah / $demografiTotal * 100) : 0 }}%"></div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         <div class="grid gap-4 lg:grid-cols-3">
             <div class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
                 <div class="space-y-1">
@@ -173,6 +217,49 @@
                         <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No keluarga data yet.') }}</div>
                     @endforelse
                 </div>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
+            <div class="space-y-1">
+                <flux:heading>{{ __('Recent changes') }}</flux:heading>
+                <flux:text>{{ __('Latest changes to congregation data.') }}</flux:text>
+            </div>
+
+            <div class="mt-5 divide-y divide-neutral-200 dark:divide-neutral-700">
+                @forelse ($recentActivities as $activity)
+                    @php($changes = \App\Support\UmatActivityPresenter::changes($activity))
+                    <div class="flex items-start justify-between gap-3 py-3">
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                                {{ $activity->description }}
+                                @if ($name = $activity->subject?->nama_lengkap ?? data_get($activity->attribute_changes?->toArray() ?? [], 'attributes.nama_lengkap'))
+                                    &mdash; <span class="text-zinc-600 dark:text-zinc-400">{{ $name }}</span>
+                                @endif
+                            </div>
+
+                            @if (count($changes) > 0)
+                                <ul class="mt-1 space-y-0.5">
+                                    @foreach ($changes as $change)
+                                        <li class="text-xs text-zinc-600 dark:text-zinc-400">
+                                            <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $change['label'] }}:</span>
+                                            <span class="text-rose-600 line-through dark:text-rose-400">{{ $change['from'] }}</span>
+                                            <span class="text-zinc-400">&rarr;</span>
+                                            <span class="text-emerald-600 dark:text-emerald-400">{{ $change['to'] }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                {{ $activity->causer?->name ?? __('System') }}
+                            </div>
+                        </div>
+                        <div class="whitespace-nowrap text-xs text-zinc-400">{{ $activity->created_at->diffForHumans() }}</div>
+                    </div>
+                @empty
+                    <div class="py-3 text-sm text-zinc-500 dark:text-zinc-400">{{ __('No changes recorded yet.') }}</div>
+                @endforelse
             </div>
         </div>
     </div>

@@ -99,6 +99,180 @@ test('authenticated users can search umat', function () {
         ->assertDontSee('Yusuf Bandung');
 });
 
+test('new umat defaults to calon with todays tanggal masuk', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('openCreateModal')
+        ->assertSet('form.status', Umat::STATUS_CALON)
+        ->assertSet('form.tanggal_masuk', now()->toDateString())
+        ->set('form.nama_lengkap', 'Calon Baru')
+        ->call('saveUmat')
+        ->assertHasNoErrors();
+
+    $umat = Umat::query()->where('nama_lengkap', 'Calon Baru')->sole();
+
+    expect($umat->status)->toBe(Umat::STATUS_CALON)
+        ->and($umat->tanggal_masuk->toDateString())->toBe(now()->toDateString());
+});
+
+test('status must be one of the allowed values', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('openCreateModal')
+        ->set('form.nama_lengkap', 'Invalid Status')
+        ->set('form.status', 'tidak-valid')
+        ->call('saveUmat')
+        ->assertHasErrors(['form.status']);
+});
+
+test('tanggal keluar cannot precede tanggal masuk', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('openCreateModal')
+        ->set('form.nama_lengkap', 'Bad Dates')
+        ->set('form.tanggal_masuk', '2026-01-10')
+        ->set('form.tanggal_keluar', '2026-01-01')
+        ->call('saveUmat')
+        ->assertHasErrors(['form.tanggal_keluar']);
+});
+
+test('main list hides archived umat by default and shows them when toggled', function () {
+    $user = User::factory()->create();
+
+    Umat::factory()->create(['nama_lengkap' => 'Jemaat Aktif', 'status' => Umat::STATUS_AKTIF]);
+    Umat::factory()->create(['nama_lengkap' => 'Jemaat Keluar', 'status' => Umat::STATUS_KELUAR]);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->assertSee('Jemaat Aktif')
+        ->assertDontSee('Jemaat Keluar')
+        ->set('showArchived', true)
+        ->assertSee('Jemaat Keluar')
+        ->assertDontSee('Jemaat Aktif');
+});
+
+test('calon are visible in the main list', function () {
+    $user = User::factory()->create();
+
+    Umat::factory()->create(['nama_lengkap' => 'Calon Pantau', 'status' => Umat::STATUS_CALON]);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->assertSee('Calon Pantau');
+});
+
+test('only calon matang filter lists prospects monitored at least six months', function () {
+    $user = User::factory()->create();
+
+    Umat::factory()->calonMatang()->create(['nama_lengkap' => 'Calon Matang']);
+    Umat::factory()->create([
+        'nama_lengkap' => 'Calon Baru',
+        'status' => Umat::STATUS_CALON,
+        'tanggal_masuk' => now()->subMonth()->toDateString(),
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->set('onlyCalonMatang', true)
+        ->assertSee('Calon Matang')
+        ->assertDontSee('Calon Baru');
+});
+
+test('authenticated users can promote a prospect to active', function () {
+    $user = User::factory()->create();
+    $umat = Umat::factory()->calonMatang()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('promoteToAktif', $umat->id)
+        ->assertHasNoErrors();
+
+    expect($umat->refresh()->status)->toBe(Umat::STATUS_AKTIF);
+});
+
+test('umur and kelompok usia are derived from tanggal lahir', function () {
+    expect(Umat::factory()->make(['tanggal_lahir' => now()->subYears(10)->toDateString()])->kelompok_usia)->toBe(Umat::KELOMPOK_ANAK)
+        ->and(Umat::factory()->make(['tanggal_lahir' => now()->subYears(15)->toDateString()])->kelompok_usia)->toBe(Umat::KELOMPOK_REMAJA)
+        ->and(Umat::factory()->make(['tanggal_lahir' => now()->subYears(25)->toDateString()])->kelompok_usia)->toBe(Umat::KELOMPOK_PEMUDA)
+        ->and(Umat::factory()->make(['tanggal_lahir' => now()->subYears(50)->toDateString()])->kelompok_usia)->toBe(Umat::KELOMPOK_DEWASA)
+        ->and(Umat::factory()->make(['tanggal_lahir' => now()->subYears(25)->toDateString()])->umur)->toBe(25)
+        ->and(Umat::factory()->make(['tanggal_lahir' => null])->kelompok_usia)->toBeNull();
+});
+
+test('pemanggilan follows gender, marital status, age, and hub kk', function () {
+    expect(Umat::factory()->make(['hub_kk' => 'Anak', 'jenis_kelamin' => 'L', 'tanggal_lahir' => now()->subYears(40)->toDateString()])->pemanggilan)->toBe('Anak')
+        ->and(Umat::factory()->make(['hub_kk' => 'Kepala Keluarga', 'jenis_kelamin' => 'L', 'status_perkawinan' => 'Belum Kawin', 'tanggal_lahir' => now()->subYears(20)->toDateString()])->pemanggilan)->toBe('Sdr')
+        ->and(Umat::factory()->make(['hub_kk' => 'Anggota', 'jenis_kelamin' => 'P', 'status_perkawinan' => 'Belum Kawin', 'tanggal_lahir' => now()->subYears(16)->toDateString()])->pemanggilan)->toBe('Sdri')
+        ->and(Umat::factory()->make(['hub_kk' => 'Kepala Keluarga', 'jenis_kelamin' => 'L', 'status_perkawinan' => 'Kawin', 'tanggal_lahir' => now()->subYears(40)->toDateString()])->pemanggilan)->toBe('Bapak')
+        ->and(Umat::factory()->make(['hub_kk' => 'Istri', 'jenis_kelamin' => 'P', 'status_perkawinan' => 'Kawin', 'tanggal_lahir' => now()->subYears(35)->toDateString()])->pemanggilan)->toBe('Ibu');
+});
+
+test('users can filter umat by age group', function () {
+    $user = User::factory()->create();
+
+    Umat::factory()->create(['nama_lengkap' => 'Bocah Kecil', 'tanggal_lahir' => now()->subYears(10)->toDateString()]);
+    Umat::factory()->create(['nama_lengkap' => 'Orang Dewasa', 'tanggal_lahir' => now()->subYears(45)->toDateString()]);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->set('filterKelompokUsia', Umat::KELOMPOK_ANAK)
+        ->assertSee('Bocah Kecil')
+        ->assertDontSee('Orang Dewasa');
+});
+
+test('users can filter umat by birthday month', function () {
+    $user = User::factory()->create();
+
+    Umat::factory()->create(['nama_lengkap' => 'Lahir Maret', 'tanggal_lahir' => '1990-03-15']);
+    Umat::factory()->create(['nama_lengkap' => 'Lahir Agustus', 'tanggal_lahir' => '1990-08-15']);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->set('filterBulanUlangTahun', 3)
+        ->assertSee('Lahir Maret')
+        ->assertDontSee('Lahir Agustus');
+});
+
+test('birthdays this month shortcut sets current month filter', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('filterUlangTahunBulanIni')
+        ->assertSet('filterBulanUlangTahun', (int) now()->month);
+});
+
+test('users can filter umat by area', function () {
+    $user = User::factory()->create();
+    $area = Area::factory()->create(['name' => 'Area Filter']);
+
+    Umat::factory()->create(['nama_lengkap' => 'Warga Area', 'area_id' => $area->id]);
+    Umat::factory()->create(['nama_lengkap' => 'Warga Lain', 'area_id' => Area::factory()->create()->id]);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->set('filterAreaId', $area->id)
+        ->assertSee('Warga Area')
+        ->assertDontSee('Warga Lain');
+});
+
 test('authenticated users can see umat relationship data', function () {
     $user = User::factory()->create();
     $area = Area::factory()->create(['name' => 'Jakarta Barat']);

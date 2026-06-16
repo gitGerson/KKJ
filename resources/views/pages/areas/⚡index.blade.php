@@ -5,15 +5,22 @@ use Flux\Flux;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 new #[Title('Area')] class extends Component {
+    use WithFileUploads;
     use WithPagination;
 
     public string $name = '';
+    public string $gembala = '';
+    public ?TemporaryUploadedFile $ttd = null;
     public string $search = '';
     public ?int $editingAreaId = null;
     public ?int $selectedAreaId = null;
@@ -30,13 +37,21 @@ new #[Title('Area')] class extends Component {
 
     public function createArea(): void
     {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
+        Gate::authorize('manage-data');
 
-        Area::create($validated);
+        $validated = $this->validateArea();
 
-        $this->reset('name');
+        $area = new Area();
+        $area->name = $validated['name'];
+        $area->gembala = $validated['gembala'] ?: null;
+
+        if ($this->ttd) {
+            $area->ttd_path = $this->ttd->store('signatures', 'public');
+        }
+
+        $area->save();
+
+        $this->resetForm();
 
         Flux::toast(variant: 'success', text: __('Area created.'));
     }
@@ -48,6 +63,8 @@ new #[Title('Area')] class extends Component {
         $this->selectArea($area->id);
         $this->editingAreaId = $area->id;
         $this->name = $area->name;
+        $this->gembala = (string) $area->gembala;
+        $this->ttd = null;
     }
 
     public function selectArea(int $areaId): void
@@ -57,11 +74,23 @@ new #[Title('Area')] class extends Component {
 
     public function updateArea(): void
     {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
+        Gate::authorize('manage-data');
 
-        Area::query()->findOrFail($this->editingAreaId)->update($validated);
+        $validated = $this->validateArea();
+
+        $area = Area::query()->findOrFail($this->editingAreaId);
+        $area->name = $validated['name'];
+        $area->gembala = $validated['gembala'] ?: null;
+
+        if ($this->ttd) {
+            if ($area->ttd_path) {
+                Storage::disk('public')->delete($area->ttd_path);
+            }
+
+            $area->ttd_path = $this->ttd->store('signatures', 'public');
+        }
+
+        $area->save();
 
         $this->cancelEditing();
 
@@ -70,11 +99,30 @@ new #[Title('Area')] class extends Component {
 
     public function cancelEditing(): void
     {
-        $this->reset('editingAreaId', 'name');
+        $this->resetForm();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateArea(): array
+    {
+        return $this->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'gembala' => ['nullable', 'string', 'max:255'],
+            'ttd' => ['nullable', 'image', 'max:2048'],
+        ]);
+    }
+
+    private function resetForm(): void
+    {
+        $this->reset('editingAreaId', 'name', 'gembala', 'ttd');
     }
 
     public function deleteArea(int $areaId): void
     {
+        Gate::authorize('manage-data');
+
         Area::query()->findOrFail($areaId)->delete();
 
         if ($this->editingAreaId === $areaId) {
@@ -163,13 +211,15 @@ new #[Title('Area')] class extends Component {
                                             {{ __('Detail') }}
                                         </flux:button>
 
-                                        <flux:button size="sm" variant="filled" wire:click="editArea({{ $area->id }})">
-                                            {{ __('Edit') }}
-                                        </flux:button>
+                                        @can('manage-data')
+                                            <flux:button size="sm" variant="filled" wire:click="editArea({{ $area->id }})">
+                                                {{ __('Edit') }}
+                                            </flux:button>
 
-                                        <flux:button size="sm" variant="danger" wire:click="deleteArea({{ $area->id }})" wire:confirm="{{ __('Delete this area?') }}">
-                                            {{ __('Delete') }}
-                                        </flux:button>
+                                            <flux:button size="sm" variant="danger" wire:click="deleteArea({{ $area->id }})" wire:confirm="{{ __('Delete this area?') }}">
+                                                {{ __('Delete') }}
+                                            </flux:button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
@@ -191,6 +241,7 @@ new #[Title('Area')] class extends Component {
             @endif
         </div>
 
+        @can('manage-data')
         <form wire:submit="{{ $editingAreaId ? 'updateArea' : 'createArea' }}" class="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-zinc-900">
             <div class="space-y-1">
                 <flux:heading>{{ $editingAreaId ? __('Edit area') : __('Create area') }}</flux:heading>
@@ -199,6 +250,19 @@ new #[Title('Area')] class extends Component {
 
             <div class="mt-5 space-y-5">
                 <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus />
+
+                <flux:input wire:model="gembala" :label="__('Pastor (gembala area)')" type="text" />
+
+                <flux:field>
+                    <flux:label>{{ __('Signature image') }}</flux:label>
+                    <flux:input wire:model="ttd" type="file" accept="image/*" />
+                    <flux:description>{{ __('Used in the "Mengetahui" section of family card PDFs.') }}</flux:description>
+                    <flux:error name="ttd" />
+
+                    @if ($editingAreaId && $this->selectedArea?->ttd_path)
+                        <img src="{{ Storage::disk('public')->url($this->selectedArea->ttd_path) }}" alt="" class="mt-2 h-16 rounded border border-neutral-200 bg-white object-contain p-1 dark:border-neutral-700" />
+                    @endif
+                </flux:field>
 
                 <div class="flex items-center gap-3">
                     <flux:button variant="primary" type="submit">
@@ -213,6 +277,7 @@ new #[Title('Area')] class extends Component {
                 </div>
             </div>
         </form>
+        @endcan
     </div>
 
     <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-zinc-900">

@@ -37,6 +37,21 @@ class UmatFactory extends Factory
             'pekerjaan' => fake()->jobTitle(),
             'domisili' => fake()->city(),
             'keluarga_id' => Keluarga::factory(),
+            'status' => Umat::STATUS_AKTIF,
+            'tanggal_masuk' => fake()->dateTimeBetween('-3 years', 'now')->format('Y-m-d'),
+            'tanggal_keluar' => null,
+            'keterangan' => null,
         ];
+    }
+
+    /**
+     * Calon jemaat yang sudah dipantau lebih dari 6 bulan.
+     */
+    public function calonMatang(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => Umat::STATUS_CALON,
+            'tanggal_masuk' => now()->subMonths(7)->toDateString(),
+        ]);
     }
 }
