@@ -516,21 +516,33 @@ new #[Title('Umat')] class extends Component {
                         <flux:input wire:model="form.nama_panggilan" :label="__('Panggilan')" type="text" />
                         <flux:input wire:model="form.nomor_telepon" :label="__('HP')" type="text" />
 
-                        <flux:select wire:model="form.jenis_kelamin" :label="__('P/L')" required>
-                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                            <flux:select.option value="P">{{ __('P') }}</flux:select.option>
-                            <flux:select.option value="L">{{ __('L') }}</flux:select.option>
+                        <flux:field>
+                            <flux:label>
+                                {{ __('P/L') }}
+                                <span class="text-brand-red-500">*</span>
+                            </flux:label>
+                            <flux:select wire:model="form.jenis_kelamin" required>
+                                <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                                <flux:select.option value="P">{{ __('P') }}</flux:select.option>
+                                <flux:select.option value="L">{{ __('L') }}</flux:select.option>
+                            </flux:select>
                             <flux:error name="form.jenis_kelamin" />
-                        </flux:select>
+                        </flux:field>
 
-                        <flux:select wire:model="form.status_perkawinan" :label="__('Status')" required>
-                            <flux:select.option value="">{{ __('-') }}</flux:select.option>
-                            <flux:select.option value="Belum Kawin">{{ __('Belum Kawin') }}</flux:select.option>
-                            <flux:select.option value="Kawin">{{ __('Kawin') }}</flux:select.option>
-                            <flux:select.option value="Cerai Hidup">{{ __('Cerai Hidup') }}</flux:select.option>
-                            <flux:select.option value="Cerai Mati">{{ __('Cerai Mati') }}</flux:select.option>
+                        <flux:field>
+                            <flux:label>
+                                {{ __('Status') }}
+                                <span class="text-brand-red-500">*</span>
+                            </flux:label>
+                            <flux:select wire:model="form.status_perkawinan" required>
+                                <flux:select.option value="">{{ __('-') }}</flux:select.option>
+                                <flux:select.option value="Belum Kawin">{{ __('Belum Kawin') }}</flux:select.option>
+                                <flux:select.option value="Kawin">{{ __('Kawin') }}</flux:select.option>
+                                <flux:select.option value="Cerai Hidup">{{ __('Cerai Hidup') }}</flux:select.option>
+                                <flux:select.option value="Cerai Mati">{{ __('Cerai Mati') }}</flux:select.option>
+                            </flux:select>
                             <flux:error name="form.status_perkawinan" />
-                        </flux:select>
+                        </flux:field>
 
                         <flux:select wire:model="form.golongan_darah" :label="__('Gol Dar')">
                             <flux:select.option value="">{{ __('-') }}</flux:select.option>
@@ -586,7 +598,14 @@ new #[Title('Umat')] class extends Component {
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <flux:input wire:model="form.tempat_lahir" :label="__('Tempat lahir')" type="text" />
-                        <flux:input wire:model="form.tanggal_lahir" :label="__('Tanggal lahir')" type="date" required />
+                        <flux:field>
+                            <flux:label>
+                                {{ __('Tanggal lahir') }}
+                                <span class="text-brand-red-500">*</span>
+                            </flux:label>
+                            <flux:input wire:model="form.tanggal_lahir" type="date" required />
+                            <flux:error name="form.tanggal_lahir" />
+                        </flux:field>
                         <flux:input wire:model="form.pendidikan" :label="__('Pendidikan')" type="text" />
                         <flux:input wire:model="form.pekerjaan" :label="__('Pekerjaan')" type="text" />
                     </div>
@@ -601,13 +620,19 @@ new #[Title('Umat')] class extends Component {
                     </div>
 
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <flux:select wire:model="form.status" :label="__('Status')">
-                            <flux:select.option value="calon">{{ __('Calon') }}</flux:select.option>
-                            <flux:select.option value="aktif">{{ __('Aktif') }}</flux:select.option>
-                            <flux:select.option value="keluar">{{ __('Keluar') }}</flux:select.option>
-                            <flux:select.option value="meninggal">{{ __('Meninggal') }}</flux:select.option>
+                        <flux:field>
+                            <flux:label>
+                                {{ __('Status') }}
+                                <span class="text-brand-red-500">*</span>
+                            </flux:label>
+                            <flux:select wire:model="form.status" required>
+                                <flux:select.option value="calon">{{ __('Calon') }}</flux:select.option>
+                                <flux:select.option value="aktif">{{ __('Aktif') }}</flux:select.option>
+                                <flux:select.option value="keluar">{{ __('Keluar') }}</flux:select.option>
+                                <flux:select.option value="meninggal">{{ __('Meninggal') }}</flux:select.option>
+                            </flux:select>
                             <flux:error name="form.status" />
-                        </flux:select>
+                        </flux:field>
 
                         <flux:input wire:model="form.tanggal_masuk" :label="__('Tanggal masuk')" type="date" />
                         <flux:input wire:model="form.tanggal_keluar" :label="__('Tanggal keluar')" type="date" />

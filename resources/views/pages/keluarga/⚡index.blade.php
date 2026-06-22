@@ -470,8 +470,8 @@ new #[Title('Keluarga')] class extends Component {
                     <div class="space-y-2">
                         <div class="hidden grid-cols-[10rem_minmax(20rem,1.5fr)_10rem_13rem_5rem] gap-3 px-3 text-xs font-medium uppercase text-zinc-500 dark:text-zinc-400 xl:grid">
                             <div>{{ __('Jenis') }}</div>
-                            <div>{{ __('Nama lengkap') }}</div>
-                            <div>{{ __('Gender') }}</div>
+                            <div>{{ __('Nama lengkap') }} <span class="text-brand-red-500">*</span></div>
+                            <div>{{ __('Gender') }} <span class="text-brand-red-500">*</span></div>
                             <div>{{ __('Hub KK') }}</div>
                             <div class="text-end">{{ __('Actions') }}</div>
                         </div>
