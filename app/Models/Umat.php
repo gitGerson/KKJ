@@ -229,7 +229,8 @@ class Umat extends Model
             }
 
             $pria = $this->jenis_kelamin === 'L';
-            $sudahMenikah = $this->status_perkawinan !== null && $this->status_perkawinan !== 'Belum Kawin';
+            $statusPerkawinan = blank($this->status_perkawinan) ? null : $this->status_perkawinan;
+            $sudahMenikah = $statusPerkawinan !== null && $statusPerkawinan !== 'Belum Kawin';
 
             if ($sudahMenikah) {
                 return $pria ? 'Bapak' : 'Ibu';

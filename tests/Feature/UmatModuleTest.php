@@ -215,6 +215,7 @@ test('umur and kelompok usia are derived from tanggal lahir', function () {
 test('pemanggilan follows age, gender, and marital status', function () {
     expect(Umat::factory()->make(['jenis_kelamin' => 'L', 'status_perkawinan' => 'Kawin', 'tanggal_lahir' => now()->subYears(13)->toDateString()])->pemanggilan)->toBe('Anak')
         ->and(Umat::factory()->make(['jenis_kelamin' => 'L', 'status_perkawinan' => 'Belum Kawin', 'tanggal_lahir' => now()->subYears(20)->toDateString()])->pemanggilan)->toBe('Sdr')
+        ->and(Umat::factory()->make(['jenis_kelamin' => 'L', 'status_perkawinan' => '', 'tanggal_lahir' => now()->subYears(21)->toDateString()])->pemanggilan)->toBe('Sdr')
         ->and(Umat::factory()->make(['jenis_kelamin' => 'P', 'status_perkawinan' => 'Belum Kawin', 'tanggal_lahir' => now()->subYears(16)->toDateString()])->pemanggilan)->toBe('Sdri')
         ->and(Umat::factory()->make(['jenis_kelamin' => 'L', 'status_perkawinan' => 'Kawin', 'tanggal_lahir' => now()->subYears(25)->toDateString()])->pemanggilan)->toBe('Bapak')
         ->and(Umat::factory()->make(['jenis_kelamin' => 'P', 'status_perkawinan' => 'Kawin', 'tanggal_lahir' => now()->subYears(35)->toDateString()])->pemanggilan)->toBe('Ibu')
