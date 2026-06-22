@@ -10,6 +10,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -268,12 +269,12 @@ new #[Title('Umat')] class extends Component {
             'form.nama_lengkap' => ['required', 'string', 'max:255'],
             'form.nama_panggilan' => ['nullable', 'string', 'max:255'],
             'form.nomor_telepon' => ['nullable', 'string', 'max:255'],
-            'form.jenis_kelamin' => ['nullable', 'string', 'max:1'],
-            'form.status_perkawinan' => ['nullable', 'string', 'max:255'],
+            'form.jenis_kelamin' => ['required', 'string', Rule::in(Umat::jenisKelaminList())],
+            'form.status_perkawinan' => ['required', 'string', Rule::in(Umat::statusPerkawinanList())],
             'form.hub_kk' => ['nullable', 'string', 'max:255'],
             'form.golongan_darah' => ['nullable', 'string', 'max:255'],
             'form.tempat_lahir' => ['nullable', 'string', 'max:255'],
-            'form.tanggal_lahir' => ['nullable', 'date'],
+            'form.tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
             'form.alamat' => ['nullable', 'string'],
             'form.kemah_id' => ['nullable', 'exists:kemah,id'],
             'form.area_id' => ['nullable', 'exists:area,id'],
@@ -515,18 +516,20 @@ new #[Title('Umat')] class extends Component {
                         <flux:input wire:model="form.nama_panggilan" :label="__('Panggilan')" type="text" />
                         <flux:input wire:model="form.nomor_telepon" :label="__('HP')" type="text" />
 
-                        <flux:select wire:model="form.jenis_kelamin" :label="__('P/L')">
+                        <flux:select wire:model="form.jenis_kelamin" :label="__('P/L')" required>
                             <flux:select.option value="">{{ __('-') }}</flux:select.option>
                             <flux:select.option value="P">{{ __('P') }}</flux:select.option>
                             <flux:select.option value="L">{{ __('L') }}</flux:select.option>
+                            <flux:error name="form.jenis_kelamin" />
                         </flux:select>
 
-                        <flux:select wire:model="form.status_perkawinan" :label="__('Status')">
+                        <flux:select wire:model="form.status_perkawinan" :label="__('Status')" required>
                             <flux:select.option value="">{{ __('-') }}</flux:select.option>
                             <flux:select.option value="Belum Kawin">{{ __('Belum Kawin') }}</flux:select.option>
                             <flux:select.option value="Kawin">{{ __('Kawin') }}</flux:select.option>
                             <flux:select.option value="Cerai Hidup">{{ __('Cerai Hidup') }}</flux:select.option>
                             <flux:select.option value="Cerai Mati">{{ __('Cerai Mati') }}</flux:select.option>
+                            <flux:error name="form.status_perkawinan" />
                         </flux:select>
 
                         <flux:select wire:model="form.golongan_darah" :label="__('Gol Dar')">
@@ -583,7 +586,7 @@ new #[Title('Umat')] class extends Component {
 
                     <div class="grid gap-4 md:grid-cols-2">
                         <flux:input wire:model="form.tempat_lahir" :label="__('Tempat lahir')" type="text" />
-                        <flux:input wire:model="form.tanggal_lahir" :label="__('Tanggal lahir')" type="date" />
+                        <flux:input wire:model="form.tanggal_lahir" :label="__('Tanggal lahir')" type="date" required />
                         <flux:input wire:model="form.pendidikan" :label="__('Pendidikan')" type="text" />
                         <flux:input wire:model="form.pekerjaan" :label="__('Pekerjaan')" type="text" />
                     </div>

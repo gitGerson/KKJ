@@ -70,6 +70,21 @@ test('authenticated users can create keluarga with new umat rows', function () {
     ]);
 });
 
+test('new umat rows in keluarga require available pemanggilan fields', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::keluarga.index')
+        ->call('openCreateModal')
+        ->set('form.no_keluarga', 'KK-00003')
+        ->set('memberRows.0.mode', 'create')
+        ->set('memberRows.0.nama_lengkap', 'Maria Jakarta')
+        ->set('memberRows.0.jenis_kelamin', '')
+        ->call('saveKeluarga')
+        ->assertHasErrors(['memberRows.0.jenis_kelamin']);
+});
+
 test('authenticated users can update keluarga membership', function () {
     $user = User::factory()->create();
     $keluarga = Keluarga::factory()->create(['no_keluarga' => 'KK-OLD']);

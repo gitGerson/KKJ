@@ -99,6 +99,26 @@ class Umat extends Model
     public const KELOMPOK_DEWASA = 'dewasa';
 
     /**
+     * Jenis kelamin yang valid untuk pemanggilan otomatis.
+     *
+     * @return list<string>
+     */
+    public static function jenisKelaminList(): array
+    {
+        return ['L', 'P'];
+    }
+
+    /**
+     * Status perkawinan yang valid untuk pemanggilan otomatis.
+     *
+     * @return list<string>
+     */
+    public static function statusPerkawinanList(): array
+    {
+        return ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
+    }
+
+    /**
      * Batas usia (dalam tahun, inklusif) per kelompok. Batas atas null = tak terbatas.
      *
      * @var array<string, array{int, int|null}>

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -273,7 +274,7 @@ new #[Title('Keluarga')] class extends Component {
             'memberRows.*.nama_lengkap' => ['nullable', 'string', 'max:255'],
             'memberRows.*.nama_panggilan' => ['nullable', 'string', 'max:255'],
             'memberRows.*.nomor_telepon' => ['nullable', 'string', 'max:255'],
-            'memberRows.*.jenis_kelamin' => ['nullable', 'in:L,P'],
+            'memberRows.*.jenis_kelamin' => ['nullable', Rule::in(Umat::jenisKelaminList())],
             'memberRows.*.hub_kk' => ['nullable', 'in:Kepala Keluarga,Istri,Anak'],
         ]);
 
@@ -286,6 +287,10 @@ new #[Title('Keluarga')] class extends Component {
 
             if ($row['mode'] === 'create' && blank($row['nama_lengkap'])) {
                 $messages["memberRows.{$index}.nama_lengkap"] = __('Nama lengkap is required.');
+            }
+
+            if ($row['mode'] === 'create' && blank($row['jenis_kelamin'])) {
+                $messages["memberRows.{$index}.jenis_kelamin"] = __('Gender is required.');
             }
         }
 
@@ -504,10 +509,11 @@ new #[Title('Keluarga')] class extends Component {
                                 @else
                                     <flux:input wire:model="memberRows.{{ $index }}.nama_lengkap" :label="__('Nama lengkap')" label:sr-only type="text" size="sm" required />
 
-                                    <flux:select wire:model="memberRows.{{ $index }}.jenis_kelamin" :label="__('Gender')" label:sr-only size="sm">
+                                    <flux:select wire:model="memberRows.{{ $index }}.jenis_kelamin" :label="__('Gender')" label:sr-only size="sm" required>
                                         <flux:select.option value="">{{ __('-') }}</flux:select.option>
                                         <flux:select.option value="L">{{ __('L') }}</flux:select.option>
                                         <flux:select.option value="P">{{ __('P') }}</flux:select.option>
+                                        <flux:error name="memberRows.{{ $index }}.jenis_kelamin" />
                                     </flux:select>
 
                                     <flux:select wire:model="memberRows.{{ $index }}.hub_kk" :label="__('Hub KK')" label:sr-only size="sm">

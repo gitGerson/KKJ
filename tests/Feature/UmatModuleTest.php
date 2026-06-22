@@ -37,6 +37,8 @@ test('authenticated users can create umat', function () {
         ->set('form.nama_panggilan', 'Maria')
         ->set('form.nomor_telepon', '08123456789')
         ->set('form.jenis_kelamin', 'P')
+        ->set('form.status_perkawinan', 'Belum Kawin')
+        ->set('form.tanggal_lahir', '2000-01-01')
         ->set('form.area_id', $area->id)
         ->set('form.kemah_id', $kemah->id)
         ->set('form.keluarga_id', $keluarga->id)
@@ -48,6 +50,7 @@ test('authenticated users can create umat', function () {
         'nama_panggilan' => 'Maria',
         'nomor_telepon' => '08123456789',
         'jenis_kelamin' => 'P',
+        'status_perkawinan' => 'Belum Kawin',
         'area_id' => $area->id,
         'kemah_id' => $kemah->id,
         'keluarga_id' => $keluarga->id,
@@ -109,6 +112,9 @@ test('new umat defaults to calon with todays tanggal masuk', function () {
         ->assertSet('form.status', Umat::STATUS_CALON)
         ->assertSet('form.tanggal_masuk', now()->toDateString())
         ->set('form.nama_lengkap', 'Calon Baru')
+        ->set('form.jenis_kelamin', 'L')
+        ->set('form.status_perkawinan', 'Belum Kawin')
+        ->set('form.tanggal_lahir', now()->subYears(20)->toDateString())
         ->call('saveUmat')
         ->assertHasNoErrors();
 
@@ -139,10 +145,51 @@ test('tanggal keluar cannot precede tanggal masuk', function () {
     Livewire::test('pages::umat.index')
         ->call('openCreateModal')
         ->set('form.nama_lengkap', 'Bad Dates')
+        ->set('form.jenis_kelamin', 'L')
+        ->set('form.status_perkawinan', 'Belum Kawin')
+        ->set('form.tanggal_lahir', now()->subYears(20)->toDateString())
         ->set('form.tanggal_masuk', '2026-01-10')
         ->set('form.tanggal_keluar', '2026-01-01')
         ->call('saveUmat')
         ->assertHasErrors(['form.tanggal_keluar']);
+});
+
+test('pemanggilan source fields must be valid', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('openCreateModal')
+        ->set('form.nama_lengkap', 'Invalid Pemanggilan Data')
+        ->set('form.jenis_kelamin', 'X')
+        ->set('form.status_perkawinan', 'Tidak Jelas')
+        ->set('form.tanggal_lahir', now()->addDay()->toDateString())
+        ->call('saveUmat')
+        ->assertHasErrors([
+            'form.jenis_kelamin',
+            'form.status_perkawinan',
+            'form.tanggal_lahir',
+        ]);
+});
+
+test('pemanggilan source fields are required when creating umat directly', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::umat.index')
+        ->call('openCreateModal')
+        ->set('form.nama_lengkap', 'Missing Pemanggilan Data')
+        ->set('form.jenis_kelamin', '')
+        ->set('form.status_perkawinan', '')
+        ->set('form.tanggal_lahir', '')
+        ->call('saveUmat')
+        ->assertHasErrors([
+            'form.jenis_kelamin',
+            'form.status_perkawinan',
+            'form.tanggal_lahir',
+        ]);
 });
 
 test('main list hides archived umat by default and shows them when toggled', function () {
