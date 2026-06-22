@@ -30,11 +30,28 @@ Dokumen ini menjelaskan perubahan yang baru ditambahkan dan cara mencobanya. Dis
 
 ---
 
-## 3. Sebutan Otomatis & Umur
+## 3. Sebutan Otomatis (Title) & Umur
 
 **Apa yang berubah:** Pada daftar Umat kini muncul **sebutan** (Sdr, Sdri, Bapak, Ibu, Anak) dan **umur**, dihitung otomatis dari jenis kelamin, status nikah, hubungan keluarga, dan tanggal lahir.
 
 **Cara mencoba:** Buka menu **Umat** dan lihat kolom **Nama** — sebutan tampil di depan nama, umur di bawahnya. Tidak perlu mengisi apa pun secara manual.
+
+**Aturan automated title / sebutan pada Umat** (diperiksa berurutan dari atas — yang cocok pertama dipakai):
+
+| Sebutan | Syarat |
+| --- | --- |
+| **Anak** | Umur **0–13 tahun**, berlaku untuk semua status perkawinan |
+| **Bapak** | Jenis kelamin **Laki-laki** dan status perkawinan **sudah menikah** |
+| **Ibu** | Jenis kelamin **Perempuan** dan status perkawinan **sudah menikah** |
+| **Sdr** | Umur **14–39 tahun**, jenis kelamin **Laki-laki**, dan **belum menikah** ("Belum Kawin" atau status kosong) |
+| **Sdri** | Umur **14–39 tahun**, jenis kelamin **Perempuan**, dan **belum menikah** |
+
+Catatan:
+- Pengecekan **Anak diutamakan**: jika umurnya 0–13 tahun, sebutannya **Anak** walau status perkawinan sudah menikah.
+- **Sdr/Sdri** usia 14–39 akan berubah menjadi **Bapak/Ibu** jika status perkawinannya sudah menikah.
+- Untuk umur di atas 39 tahun, jemaat yang sudah menikah menjadi **Bapak/Ibu**; jika belum menikah tetap **Sdr/Sdri**.
+- "Sudah menikah" mencakup semua status selain **Belum Kawin** (termasuk Cerai Hidup/Cerai Mati).
+- Bila **jenis kelamin** belum diisi, sistem menganggapnya perempuan untuk sebutan (Ibu/Sdri) — sebaiknya jenis kelamin tetap diisi agar akurat.
 
 ---
 

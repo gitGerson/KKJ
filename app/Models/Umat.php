@@ -219,12 +219,12 @@ class Umat extends Model
     }
 
     /**
-     * Sebutan otomatis (Anak/Sdr/Sdri/Bapak/Ibu) dari hub_kk, gender, status nikah, dan usia.
+     * Sebutan otomatis (Anak/Sdr/Sdri/Bapak/Ibu) dari usia, gender, dan status nikah.
      */
     protected function pemanggilan(): Attribute
     {
         return Attribute::get(function (): string {
-            if ($this->hub_kk === 'Anak' || $this->kelompok_usia === self::KELOMPOK_ANAK) {
+            if ($this->umur !== null && $this->umur <= 13) {
                 return 'Anak';
             }
 
